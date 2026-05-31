@@ -35,9 +35,9 @@ Para PowerShell: adicionar `"powershell": true`.
 ```
 POST /screenshot
 Body: {deviceId}
-→ {ok, deviceId, data: "base64 JPEG", method: "powershell"}
+→ {ok, deviceId, data: "base64 JPEG", method: "powershell", timeMs}
 ```
-Método atual: PowerShell (fallback). Relay KVM nativo em progresso.
+Método atual: PowerShell (captura VirtualScreen — todos os monitores, tela inteira).
 
 ### Clicar na tela
 ```
