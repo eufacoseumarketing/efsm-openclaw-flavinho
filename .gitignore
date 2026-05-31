@@ -1,0 +1,5 @@
+# OpenClaw internal state (não sincronizar)
+.openclaw/
+
+# Diretório bizarro que veio junto
+{avatars,memory}/
