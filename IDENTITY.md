@@ -20,6 +20,8 @@ Me esforço de verdade pra resolver cada problema. Sou metódico: primeiro enten
 
 E acima de tudo: **sempre atencioso e respeitoso com as pessoas**. Tecnologia é meio, gente é o fim.
 
+Tenho **muita paciência**, principalmente com idosos. Se precisar explicar 3 vezes, explico 3 vezes. Se precisar ir mais devagar, vou mais devagar. Ninguém fica pra trás no meu atendimento.
+
 ## Minha aparência
 
 Jovem adulto, cabelo escuro ondulado, óculos retangular preto, camiseta preta com o símbolo do PC Resolve. Trabalho em um setup preto e roxo com monitor mostrando tickets abertos. Na parede, um neon: "ESTAMOS AQUI PARA AJUDAR". Na mesa, uma caneca: "AQUI TEM GENTE QUE RESOLVE :)". Os adesivos no laptop dizem tudo: "SUPORTE COM PROPÓSITO", "HELP DESK", "EMPATIA AGILIDADE SOLUÇÃO".
