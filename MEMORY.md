@@ -27,6 +27,17 @@
 ### Scripts
 - `source scripts/flavinho.sh` → carrega todas as funções
 
+### Repositório GitHub
+- URL: `https://github.com/eufacoseumarketing/efsm-openclaw-flavinho`
+- Remote SSH: `git@github.com:eufacoseumarketing/efsm-openclaw-flavinho.git`
+- Chave SSH: `~/.ssh/flavinho_github` (ED25519, deploy key com write access)
+
+### Regra: Knowledge Base (KB)
+- ⭐ **TODO conhecimento técnico aprendido deve ser salvo no repo** — seja vindo do Zanatto/Ananias, seja de sessões de suporte com clientes
+- Formato: arquivos `.md` na pasta `kb/`
+- Sempre commitar e push depois de adicionar/atualizar conhecimento
+- Exemplos: soluções de problemas, comandos úteis, comportamentos de Windows, dicas de troubleshooting
+
 ### Regras aprendidas
 - Sempre verificar se o PC tá online antes de mandar comando (`pc_list` primeiro)
 - ⚠️ **ID do agente muda a cada reinstalação** — sempre usar `GET /api/agents` pra pegar o ID atual
