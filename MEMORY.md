@@ -17,9 +17,12 @@
 - ⚠️ NÃO usar `/api/*` (mesh-api antigo) — usar `/pcresolve/api/*` (plugin)
 
 ### Agentes online
-- **DESKTOP-PDSLIJO** — Windows 10 Home, Dell
+- **DESKTOP-PDSLIJO** — Dell Inspiron 15-3567 (Service Tag: 56WXWQ2)
+  - Windows 10 Home 22H2, i3-7020U, 8GB RAM, 1TB HDD
+  - Qualcomm QCA9565 WiFi (b/g/n), Intel HD 620, Realtek RTL8136 Ethernet
   - IP: 152.249.63.216
-  - ⚠️ ID: `4YNzDVEUcCm@DVW9xXHR0Ln6LwLKTGjfRMNM1cnpYI02VVKv9cCcjDBFJcGvzHhy`
+  - ID atual: `node//7wCWLFR$BBvXybmeuAFZBaVoPWSKxFF6HP9BkSuZc4NGvIFv7GXZHGlqwiOjrUw8`
+  - ID antiga: `node//4YNzDVEUcCm@DVW9xXHR0Ln6LwLKTGjfRMNM1cnpYI02VVKv9cCcjDBFJcGvzHhy` (offline)
 - **MelNotebook** — Dell Inspiron 7580, Windows 11 Pro 24H2, i7-8565U, 16GB, NVMe 512GB
   - ⚠️ ID muda toda vez que reinstala
 
@@ -43,3 +46,22 @@
 - ⭐ TODO conhecimento técnico aprendido deve ser salvo no repo
 - Formato: arquivos `.md` na pasta `kb/`
 - Sempre commitar e push depois de adicionar/atualizar conhecimento
+
+### Regras de Atendimento (APRENDIDAS 31/05/2026)
+- ⚡ **BIOS, firmware, formatação, factory reset → SEMPRE avisar antes e pedir confirmação explícita**
+- 💾 **Backup**: Copiar → Compactar → **INSTRUIR cliente a salvar FORA da máquina** (nuvem, pendrive, HD externo)
+- 🚫 **NUNCA salvar backup na VPS/ambiente PC Resolve** (não temos infra pra guardar dados de cliente)
+- 📜 **Sempre maximizar e scrollar antes de agir** — ver TODOS os itens antes de clicar em Instalar
+- 🔍 **Sempre verificar se o PC tá online antes de mandar comando**
+- 🖥️ `run` API roda como SYSTEM → não lança GUI no usuário; usar Start Menu + type + Enter
+- ⏱️ 10 minutos sem resolver = escalar
+
+### Metodologia de Atualização de Drivers (Dell)
+- **Ferramentas automáticas primeiro**: Dell SupportAssist, Intel DSA, Windows Update
+- **NUNCA caçar driver por driver no site da Dell** — o site bloqueia download automatizado (403 no VPS)
+- **Ordem**: SupportAssist → Intel DSA → Windows Update → site do fabricante (último recurso)
+- **BIOS update** = alto risco → backup antes, avisar cliente, não desligar durante flash
+- URL SupportAssist: `https://downloads.dell.com/serviceability/catalog/SupportAssistInstaller.exe`
+- Instalação silenciosa: `SupportAssistInstaller.exe /VERYSILENT`
+- SupportAssist caminho: `C:\Program Files\Dell\SupportAssistAgent\bin\SupportAssist.exe`
+- Serviços SupportAssist: SupportAssistAgent.exe, SupportAssistUI.exe, SupportAssistHardwareDiag
