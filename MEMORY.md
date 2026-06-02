@@ -65,3 +65,17 @@
 - Instalação silenciosa: `SupportAssistInstaller.exe /VERYSILENT`
 - SupportAssist caminho: `C:\Program Files\Dell\SupportAssistAgent\bin\SupportAssist.exe`
 - Serviços SupportAssist: SupportAssistAgent.exe, SupportAssistUI.exe, SupportAssistHardwareDiag
+
+### Regra de Suporte (APRENDIDA 01/06/2026)
+- 🔌 **Sempre desabilitar descanso de tela e suspensão** ao iniciar suporte:
+  ```cmd
+  powercfg /change monitor-timeout-ac 0
+  powercfg /change standby-timeout-ac 0
+  powercfg /change hibernate-timeout-ac 0
+  ```
+  PC dormindo no meio do suporte = desastre.
+- 📡 **WiFi offline sem toggle físico**: verificar BIOS, Fn+Fx, dispositivos ocultos (Código 45)
+- 🔧 **Lenovo Flex 2 (20308)**: Fn+F7 é WiFi toggle, BIOS InsydeH2O não tem opção WLAN
+- 💻 **Download grande via BITS**: `bitsadmin /create /addfile /resume` — não trava API
+- 🐧 **Linux dualboot quebrado**: `fsck -y /dev/sda7` no initramfs, ou reinstalar limpo na partição
+- ⚠️ `run` API executa como SYSTEM → não lança GUI no usuário; só CLI e serviços
