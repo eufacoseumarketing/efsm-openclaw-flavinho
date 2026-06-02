@@ -5,6 +5,36 @@
 - **Auth:** `x-api-key: pc-resolve-secret-key-change-me`
 - **Script:** `source scripts/flavinho.sh` → `pc_list`, `pc_info`, `pc_run`, `pc_ps`, `pc_click`, `pc_type`, `pc_key`, `pc_screenshot`, `pc_open`, `pc_power`
 
+## 📥 Instalação de Agente nos Clientes (LIÇÃO APRENDIDA 02/06/2026)
+
+**⛔ NUNCA tentar instalar agente manualmente por binário cru + .msh.**
+**✅ SEMPRE usar o painel web MeshCentral → Add Agent.**
+
+### Procedimento correto (Windows e Linux):
+1. Acessar <https://agent.pcresolve.com.br> — login `admin` / `Efsm1234*`
+2. Clicar em **"Add Agent"** (Adicionar Agente)
+3. Escolher o SO (Windows ou Linux)
+4. Copiar o comando de instalação gerado (contém token do dispositivo)
+5. Enviar pro cliente colar no terminal
+
+### Por que o jeito manual falha:
+- O binário cru (`meshagents?id=6`) não tem config de servidor
+- O `.msh` manual fica com ~200 bytes vs 35KB do oficial
+- O `.msh` oficial contém token de autenticação criptografado
+- Sem token, o agente não registra no servidor
+
+### Comando típico Linux:
+```bash
+(wget "https://agent.pcresolve.com.br/meshagents?script=1" -O ./meshinstall.sh) && chmod 755 ./meshinstall.sh && sudo -E ./meshinstall.sh https://agent.pcresolve.com.br 'TOKEN_DO_DISPOSITIVO'
+```
+
+### Comando típico Windows:
+```powershell
+$url = "https://agent.pcresolve.com.br/meshagents?id=TOKEN&installflags=0&meshinstall=4"
+Invoke-WebRequest -Uri $url -OutFile meshagent.exe
+Start-Process -FilePath meshagent.exe -Wait
+```
+
 ## 📡 Endpoints (no mesh-api — this is INSIDE MeshCentral)
 
 ### Listar PCs online
