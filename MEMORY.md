@@ -42,6 +42,14 @@
 - Remote SSH: `git@github.com:eufacoseumarketing/efsm-openclaw-flavinho.git`
 - Chave SSH: `~/.ssh/flavinho_github` (ED25519, deploy key com write access)
 
+### Cron Job — Sync Noturno
+- **Job ID:** `51a407cb-27e7-4a45-9be6-a06ba248ab13`
+- **Schedule:** Todo dia às 02:30 (America/Sao_Paulo)
+- **Tipo:** Isolado (agentTurn)
+- **Delivery:** `announce` → Discord DM do Zanatto
+- **Ação:** `git add -A` → commit + push (só se houver mudanças)
+- **3 execuções até agora, 0 falhas**
+
 ### Regra: Knowledge Base (KB)
 - ⭐ TODO conhecimento técnico aprendido deve ser salvo no repo
 - Formato: arquivos `.md` na pasta `kb/`
