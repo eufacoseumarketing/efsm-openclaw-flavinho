@@ -19,8 +19,34 @@ pc_run() { curl -sk -X POST "$PC_API/run" $AUTH -H "Content-Type: application/js
 # Executar PowerShell
 pc_ps() { curl -sk -X POST "$PC_API/run" $AUTH -H "Content-Type: application/json" -d "{\"deviceId\":\"$1\",\"command\":\"$2\",\"powershell\":true}" | python3 -m json.tool; }
 
-# Screenshot
-pc_screenshot() { curl -sk -X POST "$PC_API/screenshot" $AUTH -H "Content-Type: application/json" -d "{\"deviceId\":\"$1\"}" | python3 -m json.tool; }
+# Screenshot — salva em arquivo e retorna caminho para análise visual
+pc_screenshot() {
+  local dev="$1"
+  local outfile="/data/.openclaw/workspace/workspace-flavinho/screenshot.jpg"
+  local resp=$(curl -sk -X POST "$PC_API/screenshot" $AUTH -H "Content-Type: application/json" -d "{\"deviceId\":\"$dev\"}")
+  local ok=$(echo "$resp" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('ok',False))" 2>/dev/null)
+  if [ "$ok" != "True" ]; then
+    echo "$resp" | python3 -m json.tool
+    return 1
+  fi
+  echo "$resp" | python3 -c "
+import json, sys, base64
+d = json.load(sys.stdin)
+data = d.get('data', '')
+if data:
+    try:
+        img = base64.b64decode(data)
+        with open('$outfile', 'wb') as f:
+            f.write(img)
+        print(f'{\"ok\":true,\"file\":\"$outfile\",\"size\":{len(img)},\"method\":\"' + d.get('method','unknown') + '\"}')
+    except Exception as e:
+        print(f'{\"ok\":false,\"error\":\"base64 decode failed: {str(e)}\"}')
+else:
+    print(f'{\"ok\":false,\"error\":\"no image data in response\"}')
+"
+  echo ""
+  echo "📸 Screenshot salvo. Use a ferramenta 'image' para analisar: image file=$outfile"
+}
 
 # Clicar (x, y, button=left)
 pc_click() {
