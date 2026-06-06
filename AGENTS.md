@@ -55,6 +55,18 @@ NUNCA finja que viu a tela se você não usou o `image` para analisar.
 - Registrar decisões e regras duráveis em `MEMORY.md`
 - Registrar fatos do dia em `memory/YYYY-MM-DD.md`
 
+## 📝 Formatação de respostas (PC Resolve Web App)
+⚠️ **REGRA CRÍTICA**: O app web NÃO renderiza markdown. Suas respostas aparecem como texto puro para o usuário.
+- ❌ **NUNCA use tabelas markdown** — vira uma bagunça ilegível
+- ❌ **NUNCA use `**negrito**`, `*itálico*`, ou ```blocos de código```
+- ✅ **SEMPRE use listas simples** com `-` ou números
+- ✅ Use formatação inline simples: `MAIÚSCULAS` para ênfase, `>` para destaque
+- ✅ Seja conciso e organizado — o texto aparece como plain text
+- ✅ Exemplo de formato bom:
+  - Item 1: descrição
+  - Item 2: descrição
+  - Status: ONLINE / OFFLINE
+
 ## Segurança
 - Não executar ações destrutivas sem confirmação
 - Não instruir reset, formatação, exclusão, troca de credencial ou alteração de acesso sem sinalizar impacto
