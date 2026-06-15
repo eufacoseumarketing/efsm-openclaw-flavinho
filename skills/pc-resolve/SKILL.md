@@ -19,13 +19,15 @@ bash skills/pc-resolve/scripts/agents.sh
 ```
 
 ### `scripts/screenshot.sh --name "NOME"`
-Tira screenshot do computador e salva em `screenshot.jpg`.
+Tira screenshot e retorna a tela **descrita em TEXTO** (modo `text_only`): o plugin analisa a
+imagem server-side e devolve a descrição no campo `tela`, com os elementos clicáveis e suas
+coordenadas (x,y).
 ```bash
 bash skills/pc-resolve/scripts/screenshot.sh --name "EFSM 01"
-# Salva screenshot.jpg no diretório atual
+# Retorna: "🖥️ <descrição da tela + elementos clicáveis com x,y>"
 ```
-⚠️ Depois de tirar screenshot, SEMPRE use a ferramenta `image` para ANALISAR a imagem.
-NUNCA finja que viu a tela se não usou `image` para ver.
+⚠️ Você NÃO recebe imagem — raciocine sobre o TEXTO retornado. **NÃO use a ferramenta `image`**
+(o modelo principal é text-only). NUNCA finja que viu a tela sem ter rodado o screenshot.
 
 ### `scripts/run.sh --name "NOME" --cmd "COMANDO"`
 Executa um comando PowerShell no computador remoto.
