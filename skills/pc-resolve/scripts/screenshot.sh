@@ -53,11 +53,11 @@ import json, sys, base64
 try:
     data = json.load(sys.stdin)
     
-    # text_only mode: plugin returns description as text
-    if data.get('description'):
-        print('🖥️ ' + data['description'])
-    elif data.get('text'):
-        print('🖥️ ' + data['text'])
+    # text_only mode: plugin retorna a descrição no campo 'tela'
+    # (description/text mantidos como alternativas por robustez)
+    desc = data.get('tela') or data.get('description') or data.get('text')
+    if desc:
+        print('🖥️ ' + desc)
     elif data.get('ok') and data.get('data'):
         # Fallback: plugin não suporta text_only, salvamos JPEG
         img = data.get('data', '')
