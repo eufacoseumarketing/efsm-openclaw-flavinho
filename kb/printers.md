@@ -393,6 +393,74 @@ function Test-PrinterHealth {
 
 ---
 
+## 🔍 NÍVEL 5 — Descoberta de Impressora na Rede (LIÇÃO APRENDIDA EFSM 01)
+
+### O problema
+Cliente tem uma impressora de rede mas não sabe marca, modelo, nem IP.
+Você precisa achar e instalar.
+
+### Fluxo vencedor (validado 15/06/2026)
+
+```
+PASSO 1 — Levantar a rede (instantâneo)
+  ipconfig /all                        → IP do PC + gateway
+  Get-NetNeighbor -AddressFamily IPv4  → tabela ARP (só IPs REAIS, ~2s)
+
+PASSO 2 — Filtrar candidatos
+  Remove gateway, IP do próprio PC, e IPs com MAC de fabricante
+  não-impressora (Intel, Foxconn, Realtek...)
+
+PASSO 3 — Scan ASSÍNCRONO (via arquivo, NUNCA síncrono)
+  Usar padrão de arquivo da kb/execucao-assincrona-powershell.md
+  Testar portas: 9100 (RAW), 631 (IPP), 515 (LPR)
+  Alvo: SÓ os IPs reais (+ gateway como fallback pra impressoras
+  com web interface)
+
+PASSO 4 — Poll rápido lendo o arquivo
+  A cada ~3s, Get-Content no .out pra ver progresso
+  Marcador .done = finalizou
+  Teto: ~2 min
+
+PASSO 5 — Com o IP da impressora
+  Test-NetConnection $ip -Port 9100     → confirma RAW
+  Invoke-WebRequest http://$ip:631      → web interface (se tiver)
+  Adicionar via TCP/IP Standard no Windows
+```
+
+### O que NUNCA fazer
+- ❌ Varrer todos os 254 IPs às cegas (demora, sobrecarrega)
+- ❌ Scan de rede SÍNCRONO (segura o slot, trava o agente)
+- ❌ Invoke-WebRequest pra IPs desconhecidos (se não responder, trava)
+- ❌ Tentar montar array no PowerShell com aspas duplas interpoladas
+  (escape quebra fácil — use arquivo temporário)
+
+### Por que Get-NetNeighbor é o segredo
+A tabela ARP contém TODO dispositivo que o PC já falou na rede local.
+Em vez de testar 254 IPs (a maioria vazio), você testa só os ~10-20
+que realmente existem. Exemplo real EFSM 01: 19 IPs → scan em 30s →
+impressora encontrada.
+
+### Script de descoberta (via arquivo, assíncrono)
+```powershell
+# Dispara em background
+$d="$env:PUBLIC\PCR"; New-Item -ItemType Directory -Force $d | Out-Null
+$t="PCR_net_scan"; Remove-Item "$d\$t.*" -ErrorAction SilentlyContinue
+
+# Pega os IPs da ARP (comando interno, montamos no script)
+Start-Process powershell -WindowStyle Hidden -ArgumentList @('-NoProfile','-Command',
+  "& { $base=(Get-NetIPConfiguration | Where-Object {`$_.IPv4DefaultGateway}).IPv4Address.IPAddress -replace '\.\d+$',''; Get-NetNeighbor -AddressFamily IPv4 | Where-Object {`$_.State -eq 'Reachable' -or `$_.State -eq 'Stale'} | ForEach-Object { `$_.IPAddress } | ForEach-Object { `$ip=`$_; foreach (`$p in 9100,631,515) { if ((Test-NetConnection `$ip -Port `$p -WarningAction SilentlyContinue).TcpTestSucceeded) { `"`$ip -> impressora (porta `$p)`"; break } } } } *>&1 | Out-File -Encoding utf8 '$d\$t.out'; 'DONE' | Out-File '$d\$t.done'")
+
+# Poll (roda a cada ~3s)
+$d="$env:PUBLIC\PCR"; $t="PCR_net_scan"
+if (Test-Path "$d\$t.done") { "STATUS=FINISHED"; Get-Content "$d\$t.out" }
+else { "STATUS=RUNNING"; Get-Content "$d\$t.out" -Tail 8 -ErrorAction SilentlyContinue }
+
+# Limpeza
+Remove-Item "$env:PUBLIC\PCR\PCR_net_scan.*" -Force -ErrorAction SilentlyContinue
+```
+
+---
+
 ## ⚠️ Dicas Jedi
 
 - **Papel importa!** Papel reciclado solta mais pó e entope. Papel úmido atola.
