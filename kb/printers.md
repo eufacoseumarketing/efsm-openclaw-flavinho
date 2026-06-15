@@ -487,6 +487,68 @@ perfeito, e o Start-Process só chama o arquivo.
 
 ---
 
+## 🔬 NÍVEL 6 — Identificação por SNMP (LIÇÃO 15/06/2026)
+
+### O problema
+Você já achou o IP da impressora (port scan deu positivo). Mas não sabe
+marca nem modelo pra instalar o driver certo.
+
+### Solução: SNMP com olePrn.OleSNMP (built-in do Windows)
+
+Não precisa instalar nada. O COM object `olePrn.OleSNMP` consulta a
+impressora via SNMP (porta UDP 161, community "public" na maioria) e
+devolve fabricante, modelo, número de série.
+
+### Script de identificação (2 etapas, here-string, zero escape)
+
+ETAPA 1 — Escrever o .ps1:
+```powershell
+$d="$env:PUBLIC\PCR"; New-Item -ItemType Directory -Force $d | Out-Null
+Set-Content -Path "$d\snmp.ps1" -Encoding UTF8 @'
+param($ips)
+$snmp = New-Object -ComObject olePrn.OleSNMP
+foreach ($ip in $ips) {
+  try {
+    $snmp.Open($ip, "public", 2, 3000)
+    $desc = $snmp.Get(".1.3.6.1.2.1.1.1.0")
+    $oid  = $snmp.Get(".1.3.6.1.2.1.1.2.0")
+    $name = $snmp.Get(".1.3.6.1.2.1.43.5.1.1.18.1")
+    $sn = $snmp.Get(".1.3.6.1.2.1.43.5.1.1.17.1")
+    "IP=$ip | Desc=$desc | OID=$oid | Nome=$name | SN=$sn"
+    $snmp.Close()
+  } catch {
+    "IP=$ip | ERRO=$($_.Exception.Message)"
+  }
+}
+'@
+```
+
+ETAPA 2 — Disparar (passa os IPs como array):
+```powershell
+Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-File','C:\Users\Public\PCR\snmp.ps1','-ips',"@('192.168.15.27','192.168.15.35')" *>&1 | Out-File -Encoding utf8 'C:\Users\Public\PCR\snmp.out'; 'DONE' | Out-File 'C:\Users\Public\PCR\snmp.done'"
+```
+
+OIDs consultados:
+- 1.3.6.1.2.1.1.1.0 → sysDescr (ex: "HP LaserJet M404dn")
+- 1.3.6.1.2.1.43.5.1.1.18.1 → prtGeneralPrinterName (nome da impressora)
+- 1.3.6.1.2.1.43.5.1.1.17.1 → número de série
+
+Caveats:
+- A impressora precisa ter SNMP habilitado (a maioria tem, padrão "public")
+- Firewall pode bloquear UDP 161
+- Se community não for "public", precisa descobrir (improvável em rede doméstica)
+
+### Fluxo completo de descoberta (N5 + N6)
+
+1. Get-NetNeighbor → lista de IPs reais (N5)
+2. Port scan (9100, 631, 515) nesses IPs → candidatos a impressora (N5)
+3. Para cada candidato, SNMP query → MARCA + MODELO (N6)
+4. Com marca e modelo, instalar driver correto
+
+Tempo total: ~30s (ARP) + ~30s (port scan) + ~10s (SNMP) ≈ 1 minuto.
+
+---
+
 ## ⚠️ Dicas Jedi
 
 - **Papel importa!** Papel reciclado solta mais pó e entope. Papel úmido atola.
