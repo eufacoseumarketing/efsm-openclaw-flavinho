@@ -6,3 +6,6 @@
 
 # Diretório bizarro que veio junto
 {avatars,memory}/
+.secrets/
+screenshot*.jpg
+flavinho.png
