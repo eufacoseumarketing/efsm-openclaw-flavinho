@@ -1,0 +1,242 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.6.5",
+    "lastTouchedAt": "2026-06-11T13:54:41.927Z"
+  },
+  "env": {
+    "vars": {
+      "DEEPSEEK_API_KEY": "sk-4ee64ada18b44ab6a5016a32df5ef188"
+    }
+  },
+  "update": {
+    "channel": "stable",
+    "checkOnStart": false
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "deepseek": {
+        "baseUrl": "https://api.deepseek.com",
+        "apiKey": "***REDACTED***",
+        "auth": "token",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "deepseek-v4-pro",
+            "name": "DeepSeek V4 Pro",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "openai": {
+        "baseUrl": "https://api.openai.com/v1",
+        "apiKey": "***REDACTED***",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "gpt-4.1",
+            "name": "GPT 4.1",
+            "api": "openai-completions",
+            "input": [
+              "text",
+              "image"
+            ],
+            "contextWindow": 128000,
+            "maxTokens": 16384
+          },
+          {
+            "id": "gpt-image-1",
+            "name": "GPT Image 1",
+            "api": "openai-completions"
+          }
+        ]
+      },
+      "google": {
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+        "apiKey": "***REDACTED***",
+        "api": "google-generative-ai",
+        "models": [
+          {
+            "id": "gemini-2.5-flash",
+            "name": "Gemini 2.5 Flash",
+            "api": "google-generative-ai",
+            "input": [
+              "text",
+              "image"
+            ],
+            "contextWindow": 1048576,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "DeepSeek V4 Pro",
+        "fallbacks": [
+          "deepseek/deepseek-v4-pro"
+        ]
+      },
+      "models": {
+        "deepseek/deepseek-v4-pro": {
+          "alias": "DeepSeek V4 Pro"
+        }
+      },
+      "imageModel": {
+        "primary": "google/gemini-2.5-flash"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "name": "main",
+        "model": "deepseek/deepseek-v4-pro"
+      },
+      {
+        "id": "flavinho",
+        "name": "Flavinho",
+        "workspace": "/home/node/.openclaw/workspace/workspace-flavinho"
+      },
+      {
+        "id": "ananias",
+        "name": "Ananias",
+        "workspace": "/home/node/.openclaw/workspace/workspace-ananias",
+        "model": "deepseek/deepseek-v4-pro"
+      },
+      {
+        "id": "ananias",
+        "name": "Ananias",
+        "workspace": "/home/node/.openclaw/workspace/workspace-ananias",
+        "model": "deepseek/deepseek-v4-pro"
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "agentId": "flavinho",
+      "match": {
+        "channel": "discord",
+        "accountId": "default"
+      }
+    },
+    {
+      "agentId": "flavinho",
+      "match": {
+        "channel": "discord",
+        "accountId": "flavinho"
+      }
+    }
+  ],
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "bash": true,
+    "restart": true,
+    "ownerDisplay": "raw",
+    "ownerAllowFrom": [
+      "discord:1055520662258724984"
+    ]
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "password": "***REDACTED***",
+      "mode": "password"
+    },
+    "remote": {
+      "url": "https://agentes.eufacoseu.marketing",
+      "password": "***REDACTED***"
+    },
+    "controlUi": {
+      "allowedOrigins": [
+        "http://localhost:18789",
+        "http://127.0.0.1:18789",
+        "https://agentes.eufacoseu.marketing"
+      ]
+    },
+    "nodes": {
+      "pairing": {
+        "autoApproveCidrs": [
+          "192.168.0.0/16",
+          "10.0.0.0/8",
+          "172.16.0.0/12"
+        ]
+      }
+    },
+    "http": {
+      "endpoints": {
+        "responses": {
+          "enabled": true
+        },
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "groupPolicy": "allowlist",
+      "actions": {
+        "reactions": true,
+        "polls": true,
+        "permissions": true,
+        "messages": true,
+        "threads": true,
+        "pins": true,
+        "search": true,
+        "memberInfo": true,
+        "roleInfo": true,
+        "channelInfo": true,
+        "voiceStatus": true,
+        "events": true,
+        "channels": true,
+        "presence": true
+      },
+      "accounts": {
+        "flavinho": {
+          "enabled": true,
+          "token": "***REDACTED***",
+          "groupPolicy": "allowlist",
+          "guilds": {
+            "1487448196639752273": {
+              "requireMention": true,
+              "channels": {
+                "1510418600266174685": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "plugins": {
+    "allow": [
+      "discord",
+      "workboard"
+    ],
+    "entries": {
+      "discord": {
+        "enabled": true
+      },
+      "workboard": {
+        "enabled": true
+      }
+    }
+  }
+}
