@@ -42,7 +42,10 @@ Start-Job -Name "PCR_Task" -ScriptBlock {
 ```
 - Ideal pra: DISM, sfc, Get-WindowsUpdate, scripts > 10s
 - Roda em background como job nativo do PowerShell
-- Checar depois: `Get-Job -Name "PCR_Task" | Receive-Job`
+- ⚠️ **NÃO use pra acompanhar (poll) entre comandos:** cada comando do plugin roda num
+  PowerShell NOVO — `Get-Job`/`Receive-Job` numa chamada seguinte não enxerga o job (o
+  estado morreu com o processo anterior). Para qualquer tarefa que você precise acompanhar,
+  use o **padrão via arquivo** abaixo (o arquivo sobrevive entre os comandos).
 
 ### 4. cmd /c start (Legado) — DUPLO DESACOPLAMENTO
 ```cmd
@@ -73,10 +76,49 @@ Start-ScheduledTask -TaskName 'PCR_Job'
 | Dois comandos paralelos | Serializar: um por vez |
 | `msiexec /i ...` direto | `Start-Process msiexec -ArgumentList '/i ...'` |
 
+## Controle via arquivo (PADRÃO p/ qualquer tarefa que você precise acompanhar)
+
+Como cada comando roda num PowerShell novo, o estado em memória se perde entre as chamadas.
+A saída vai pra um **arquivo** + um **marcador de fim**; você faz poll **lendo o arquivo**.
+
+### 1. Dispara destacado → saída pro arquivo + marcador (libera o slot na hora)
+```powershell
+$d="$env:PUBLIC\PCR"; New-Item -ItemType Directory -Force $d | Out-Null
+$t="PCR_task"; Remove-Item "$d\$t.*" -ErrorAction SilentlyContinue
+Start-Process powershell -WindowStyle Hidden -ArgumentList @('-NoProfile','-Command',
+  "& { <COMANDO LONGO AQUI> } *>&1 | Out-File -Encoding utf8 '$d\$t.out'; 'DONE' | Out-File '$d\$t.done'")
+```
+
+### 2. Poll — leia o arquivo de tempos em tempos (rápido, não segura o slot)
+```powershell
+$d="$env:PUBLIC\PCR"; $t="PCR_task"
+if (Test-Path "$d\$t.done") { "STATUS=FINISHED"; Get-Content "$d\$t.out" }
+else { "STATUS=RUNNING"; Get-Content "$d\$t.out" -Tail 8 -ErrorAction SilentlyContinue }
+```
+Entre os polls: `sleep` (use `sleep.sh`). Teto: ~10 polls / ~2 min. Estourou e ainda
+RUNNING → avise o usuário e pergunte se continua esperando ou para.
+
+### 3. Limpeza (SEMPRE, ao terminar)
+```powershell
+Remove-Item "$env:PUBLIC\PCR\PCR_task.*" -Force -ErrorAction SilentlyContinue
+```
+
+## Receita: descobrir impressora na rede (assíncrono + arquivo)
+1. **Instantâneo primeiro:** `Get-Printer`, `Get-PrinterPort`, `Get-PnpDevice -Class PrintQueue`.
+2. **Descoberta nativa (WSD):** o assistente "Adicionar impressora" do Windows varre a rede sozinho.
+3. **Só se precisar varrer a sub-rede:** use o padrão via arquivo acima, com este COMANDO LONGO
+   (responde em 9100=RAW, 631=IPP, 515=LPR = impressora candidata):
+```powershell
+$base=((Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway}).IPv4Address.IPAddress -replace '\.\d+$','')
+1..254 | ForEach-Object { $ip="$base.$_"
+  foreach ($p in 9100,631,515) {
+    if ((Test-NetConnection $ip -Port $p -WarningAction SilentlyContinue).TcpTestSucceeded) { "$ip -> impressora (porta $p)"; break } } }
+```
+
 ## Verificação pós-comando
 
 Depois de disparar comando assíncrono, SEMPRE verificar:
 1. Screenshot pra ver se a janela do instalador/programa abriu
 2. Clipboard ou run pra checar logs se aplicável
-3. Se usou Start-Job: `Get-Job` pra ver status
+3. Status: poll do **arquivo** (`STATUS=FINISHED`/`RUNNING`) — ver "Controle via arquivo"
 4. Se usou BITS: `Get-BitsTransfer` pra ver progresso
