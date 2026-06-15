@@ -85,6 +85,7 @@
 - Sempre commitar e push depois de adicionar/atualizar conhecimento
 
 ### Regras de Atendimento (APRENDIDAS 31/05/2026)
+- ⌨️ **CLI primeiro, tela depois**: esgotar linha de comando antes de tirar screenshot. Screenshot é recurso caro e lento — só usar quando comando não resolver (ex: confirmar visualmente, interagir com GUI, ver estado de janela)
 - ⚡ **BIOS, firmware, formatação, factory reset → SEMPRE avisar antes e pedir confirmação explícita**
 - 💾 **Backup**: Copiar → Compactar → **INSTRUIR cliente a salvar FORA da máquina** (nuvem, pendrive, HD externo)
 - 🚫 **NUNCA salvar backup na VPS/ambiente PC Resolve** (não temos infra pra guardar dados de cliente)
