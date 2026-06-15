@@ -14,6 +14,7 @@
 - URL: `https://agent.pcresolve.com.br/pcresolve/api`
 - Auth: `x-api-key: pc-resolve-secret-key-change-me`
 - Endpoints: run, screenshot, click, type, key, open-url, power
+- ⚠️ O path `/pcresolve/api/*` ficou 404 em 15/06/2026 — usar `/api/*` diretamente como fallback
 - ⚠️ NÃO usar `/api/*` (mesh-api antigo) — usar `/pcresolve/api/*` (plugin)
 
 ### Agentes online
@@ -49,6 +50,33 @@
 - **Delivery:** `announce` → Discord DM do Zanatto
 - **Ação:** `git add -A` → commit + push (só se houver mudanças)
 - **3 execuções até agora, 0 falhas**
+
+### Lições Aprendidas — 15/06/2026 (Atendimento EFSM 01)
+
+#### Cliques por coordenada
+- 🎯 **As coordenadas de clique são ESTIMADAS por mim** (o Gemini só descreve a tela em texto, não devolve coordenadas numéricas de elementos)
+- 📏 **Sempre pedir pro Gemini descrever a posição exata** dos elementos interativos antes de clicar
+- ⌨️ **Preferir navegação por Tab/Enter** quando possível — mais confiável que clique por coordenada
+- 🔄 **Se errar o clique, tirar screenshot IMEDIATAMENTE** pra ver onde foi parar — não continuar clicando às cegas
+
+#### Agente sobrecarregado (agent-busy-max-retries)
+- 🚫 **NUNCA fazer web request pra IPs externos direto do agente** do cliente (ex: `Invoke-WebRequest` pra interface web de impressora). Se o dispositivo não responder, trava o agente inteiro
+- 🐌 **Espaçar comandos**: máximo ~5 comandos por minuto. Disparar 15+ em 20 min enche a fila do MeshCentral
+- 📡 **Varredura de rede**: usar `-TimeoutSec` curto (2-3s) e limitar IPs — 19 IPs × 3 portas × 500ms = ~30s de scan, aceitável. Mas web request pra porta 631 pode travar
+- 🔧 **Se o agente travar**: esperar 2-3 minutos que a fila limpa sozinha. Se não resolver, orientar cliente a reiniciar o agente
+- ⚠️ **Screenshot também falha** quando o agente está sobrecarregado — não é bug do plugin
+
+#### Interface do usuário (GUI)
+- 🖥️ `run` API executa como SYSTEM → NÃO lança GUI visível pro usuário. Só CLI e serviços.
+- ✅ Pra abrir janelas visíveis: usar `open-url` com URIs (`ms-settings:printers`) ou simular teclas (Win, type, Enter) via `key` + `type`
+- ❌ `open-url` com `shell:::` CLSID não funciona
+
+#### Workflow ideal
+1. Screenshot → analisar descrição → identificar elementos
+2. Se precisar clicar: pedir coordenadas na descrição, OU usar Tab
+3. Máximo 1 screenshot a cada 10 segundos
+4. Se agente começar a recusar comandos: PAUSAR 2 minutos, depois tentar comando simples (`whoami`) pra testar
+5. Não disparar comandos em paralelo — fila do agente é sequencial
 
 ### Regra: Knowledge Base (KB)
 - ⭐ TODO conhecimento técnico aprendido deve ser salvo no repo
