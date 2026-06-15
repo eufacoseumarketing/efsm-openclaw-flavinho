@@ -63,6 +63,7 @@
 - 🚫 **NUNCA fazer web request pra IPs externos direto do agente** do cliente (ex: `Invoke-WebRequest` pra interface web de impressora). Se o dispositivo não responder, trava o agente inteiro
 - 🐌 **Espaçar comandos**: máximo ~5 comandos por minuto. Disparar 15+ em 20 min enche a fila do MeshCentral
 - 📡 **Varredura de rede**: usar `-TimeoutSec` curto (2-3s) e limitar IPs — 19 IPs × 3 portas × 500ms = ~30s de scan, aceitável. Mas web request pra porta 631 pode travar
+- 🎯 **Descobrir IPs reais antes do scan**: usar `Get-NetNeighbor -AddressFamily IPv4` (tabela ARP) pra listar só IPs que realmente existem na rede, depois scanear apenas esses. Muito mais eficiente que varrer 254 IPs às cegas. Exemplo: 19 IPs reais encontrados na EFSM 01, scanner neles, achou impressora em 30s.
 - 🔧 **Se o agente travar**: esperar 2-3 minutos que a fila limpa sozinha. Se não resolver, orientar cliente a reiniciar o agente
 - ⚠️ **Screenshot também falha** quando o agente está sobrecarregado — não é bug do plugin
 
