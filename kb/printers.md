@@ -440,24 +440,50 @@ Em vez de testar 254 IPs (a maioria vazio), você testa só os ~10-20
 que realmente existem. Exemplo real EFSM 01: 19 IPs → scan em 30s →
 impressora encontrada.
 
-### Script de descoberta (via arquivo, assíncrono)
+### Script de descoberta (2 etapas, ZERO escape — LIÇÃO 15/06/2026)
+
+⛔ NUNCA monte o script inline no -ArgumentList do Start-Process: aspas interpoladas
+   quebram SEMPRE. Escreva o .ps1 primeiro, depois execute.
+
+ETAPA 1 — Escrever o script .ps1 (comando curto, zero escape):
 ```powershell
-# Dispara em background
 $d="$env:PUBLIC\PCR"; New-Item -ItemType Directory -Force $d | Out-Null
-$t="PCR_net_scan"; Remove-Item "$d\$t.*" -ErrorAction SilentlyContinue
-
-# Pega os IPs da ARP (comando interno, montamos no script)
-Start-Process powershell -WindowStyle Hidden -ArgumentList @('-NoProfile','-Command',
-  "& { $base=(Get-NetIPConfiguration | Where-Object {`$_.IPv4DefaultGateway}).IPv4Address.IPAddress -replace '\.\d+$',''; Get-NetNeighbor -AddressFamily IPv4 | Where-Object {`$_.State -eq 'Reachable' -or `$_.State -eq 'Stale'} | ForEach-Object { `$_.IPAddress } | ForEach-Object { `$ip=`$_; foreach (`$p in 9100,631,515) { if ((Test-NetConnection `$ip -Port `$p -WarningAction SilentlyContinue).TcpTestSucceeded) { `"`$ip -> impressora (porta `$p)`"; break } } } } *>&1 | Out-File -Encoding utf8 '$d\$t.out'; 'DONE' | Out-File '$d\$t.done'")
-
-# Poll (roda a cada ~3s)
-$d="$env:PUBLIC\PCR"; $t="PCR_net_scan"
-if (Test-Path "$d\$t.done") { "STATUS=FINISHED"; Get-Content "$d\$t.out" }
-else { "STATUS=RUNNING"; Get-Content "$d\$t.out" -Tail 8 -ErrorAction SilentlyContinue }
-
-# Limpeza
-Remove-Item "$env:PUBLIC\PCR\PCR_net_scan.*" -Force -ErrorAction SilentlyContinue
+Set-Content -Path "$d\scan.ps1" -Encoding UTF8 @'
+$d="$env:PUBLIC\PCR"
+$base=(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway}).IPv4Address.IPAddress -replace '\.\d+$',''
+Get-NetNeighbor -AddressFamily IPv4 | Where-Object {$_.State -eq "Reachable" -or $_.State -eq "Stale"} | ForEach-Object {
+  $ip=$_.IPAddress
+  foreach ($p in 9100,631,515) {
+    if ((Test-NetConnection $ip -Port $p -WarningAction SilentlyContinue).TcpTestSucceeded) {
+      "$ip -> impressora (porta $p)"
+      break
+    }
+  }
+} *>&1 | Out-File -Encoding utf8 "$d\scan.out"
+"DONE" | Out-File "$d\scan.done"
+'@
 ```
+
+ETAPA 2 — Disparar em background (libera slot na hora):
+```powershell
+Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-File','C:\Users\Public\PCR\scan.ps1'
+```
+
+ETAPA 3 — Poll (a cada ~3s, leitura rápida do arquivo):
+```powershell
+$d="$env:PUBLIC\PCR"
+if (Test-Path "$d\scan.done") { "STATUS=FINISHED"; Get-Content "$d\scan.out" }
+else { "STATUS=RUNNING"; Get-Content "$d\scan.out" -Tail 8 -ErrorAction SilentlyContinue }
+```
+
+ETAPA 4 — Limpeza:
+```powershell
+Remove-Item "$env:PUBLIC\PCR\scan.*" -Force -ErrorAction SilentlyContinue
+```
+
+O segredo do @'...'@ (here-string): o conteúdo entre os marcadores é tratado
+LITERALMENTE — aspas, cifrões, tudo passa intacto. Zero escape. O .ps1 fica
+perfeito, e o Start-Process só chama o arquivo.
 
 ---
 

@@ -104,16 +104,11 @@ Remove-Item "$env:PUBLIC\PCR\PCR_task.*" -Force -ErrorAction SilentlyContinue
 ```
 
 ## Receita: descobrir impressora na rede (assíncrono + arquivo)
-1. **Instantâneo primeiro:** `Get-Printer`, `Get-PrinterPort`, `Get-PnpDevice -Class PrintQueue`.
-2. **Descoberta nativa (WSD):** o assistente "Adicionar impressora" do Windows varre a rede sozinho.
-3. **Só se precisar varrer a sub-rede:** use o padrão via arquivo acima, com este COMANDO LONGO
-   (responde em 9100=RAW, 631=IPP, 515=LPR = impressora candidata):
-```powershell
-$base=((Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway}).IPv4Address.IPAddress -replace '\.\d+$','')
-1..254 | ForEach-Object { $ip="$base.$_"
-  foreach ($p in 9100,631,515) {
-    if ((Test-NetConnection $ip -Port $p -WarningAction SilentlyContinue).TcpTestSucceeded) { "$ip -> impressora (porta $p)"; break } } }
-```
+
+⛔ NUNCA monte o script inline — aspas interpoladas quebram SEMPRE.
+✅ Use here-string (@'...'@) pra escrever o .ps1 primeiro, depois dispare (2 etapas).
+
+Receita completa e validada: kb/printers.md, Nível 5 — Descoberta de Impressora na Rede.
 
 ## Verificação pós-comando
 
