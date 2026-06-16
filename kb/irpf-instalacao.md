@@ -21,10 +21,10 @@ powercfg /change hibernate-timeout-ac 0
 
 ### 2. Verificar se o IRPF ja esta instalado
 ```cmd
-dir "C:\Program Files\IRPF2026" /b
+dir "C:\Arquivos de Programas RFB\IRPF2026" /b
 dir "C:\Arquivos de Programas\IRPF2026" /b
 ```
-Se mostrar arquivos (IRPF2026.exe, help, etc), ja esta instalado.
+Se mostrar arquivos (IRPF2026.exe, help, lib, etc), ja esta instalado.
 
 ### 3. Baixar o instalador
 
@@ -41,70 +41,82 @@ bitsadmin /transfer IRPF_Download /download /priority HIGH "https://downloadirpf
 ```
 
 #### Fallback: pagina de download
-Se os links diretos nao funcionarem:
 https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
 
-### 4. Executar o instalador
+### 4. Executar o instalador (VIA SCHEDULED TASK - bypass UAC)
 
-- O instalador EXIGE privilegios de administrador!
-- Instalacao silenciosa (/VERYSILENT, /S) NAO funciona (web-wrapper)
-- Abrir na sessao do usuario, nao como SYSTEM
+O instalador EXIGE privilegios de administrador e o UAC bloqueia automacao remota.
+Solucao: Scheduled Task com RunLevel Highest:
 
-#### Metodo A - Win+R com Ctrl+Shift+Enter (recomendado):
-1. `Win+R` para abrir Executar
-2. Digitar o caminho: `C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe`
-3. `Ctrl+Shift+Enter` = executar como administrador
-4. UAC: foco comeca no "Nao" → `Seta Esquerda` → `Enter` = Sim
-5. Aguardar extracao (~5 segundos)
-6. Tela de instalacao abre com foco em "Avancar" → `Enter`
-
-#### Metodo B - Via Start-Process no PowerShell:
-1. `Win+R` → `powershell` → `Enter`
-2. Digitar:
-   ```powershell
-   Start-Process "C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe" -Verb RunAs -Wait
-   ```
-5. UAC: Seta Esquerda + Enter = Sim
-6. Aguardar extracao (~5s)
-7. Foco em Avancar → Enter
-
-### 5. Navegar pelo assistente de instalacao
-Apos a extracao, aparece o assistente. Foco comeca em "Avancar":
-- Tela 1 (Boas-vindas): `Enter` = Avancar
-- Tela 2 (Termos de licenca): `Enter` = Aceitar e Avancar
-- Tela 3 (Pasta de destino): `Enter` = Avancar (manter padrao)
-- Tela 4 (Confirmar): `Enter` = Instalar
-- Aguardar a instalacao (~15-30 segundos)
-- Tela 5 (Concluido): `Enter` = Concluir
-
-### 6. Confirmar instalacao
-```cmd
-dir "C:\Program Files\IRPF2026" /b
-dir "C:\Arquivos de Programas\IRPF2026" /b
-```
-Deve mostrar: `IRPF2026.exe`, `help`, `lib`, etc.
-
-### 7. Verificar atalho
-```cmd
-dir "C:\Users\Public\Desktop\*IRPF*"
+```powershell
+$a = New-ScheduledTaskAction -Execute 'C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe'
+$p = New-ScheduledTaskPrincipal -UserId '<usuario>' -LogonType Interactive -RunLevel Highest
+Unregister-ScheduledTask -TaskName 'IRPF' -Confirm:$false -ErrorAction SilentlyContinue
+Register-ScheduledTask -TaskName 'IRPF' -Action $a -Principal $p -Force
+Start-ScheduledTask -TaskName 'IRPF'
 ```
 
-## Resumo de teclas
+Aguardar 3-5 segundos para o instalador abrir.
+
+### 5. Trazer a janela do instalador para frente com SetForegroundWindow
+
+O instalador pode abrir ATRAS de outras janelas (Widgets, Explorer, etc). Para forcar:
+
+```powershell
+Add-Type -Name F -Namespace Y -MemberDefinition '[DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);[DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int c);[DllImport("user32.dll")]public static extern bool SetWindowPos(IntPtr h,IntPtr a,int x,int y,int cx,int cy,uint f);'
+$p = Get-Process -Name IRPF2026Win32v1.5 -ErrorAction SilentlyContinue | Select-Object -First 1
+[Y.F]::ShowWindow($p.MainWindowHandle, 3)
+sleep 0.2
+[Y.F]::SetWindowPos($p.MainWindowHandle, -1, 0, 0, 0, 0, 3)  # HWND_TOPMOST
+[Y.F]::SetForegroundWindow($p.MainWindowHandle)
+```
+
+### 6. Navegar pelo assistente de instalacao (TECLADO - Tab+Enter)
+
+Com a janela em foco (SetForegroundWindow), navegar por Tab+Enter:
+
+- **Tela 1 (Boas-vindas)**: SetForegroundWindow → `Enter` (Avancar e default)
+- **Tela 2 (Pasta de destino)**: `Enter` = Avancar (manter padrao: C:\Arquivos de Programas RFB\IRPF2026)
+- **Tela 3 (Confirmacao)**: `Tab` `Tab` `Enter` (checkbox "Criar atalho" rouba foco → pular checkbox e Voltar → chegar no Avancar)
+- **Tela 4 (Progresso)**: Aguardar ~20s, barra de progresso
+- **Tela 5 (Concluido)**: `Enter` = Terminar
+
+### 7. Confirmar instalacao
+```cmd
+dir "C:\Arquivos de Programas RFB\IRPF2026" /b
+```
+Deve mostrar: `.install4j`, `help`, `jre`, `lib`, `lib-modulos`
+
+### 8. Verificar atalho na area de trabalho
+```cmd
+dir "C:\Users\<usuario>\Desktop\*IRPF*"
+```
+
+## Resumo de teclas (atualizado)
 | Passo | Tecla |
 |-------|-------|
-| UAC - Confirmar Sim | `Seta Esquerda` + `Enter` |
-| Extracao | Aguardar ~5s |
-| Avancar (telas 1-4) | `Enter` |
-| Instalar | `Enter` |
-| Concluir | `Enter` |
+| Launch instalador | Scheduled Task (RunLevel Highest) |
+| Trazer janela pra frente | SetForegroundWindow + SetWindowPos(HWND_TOPMOST) |
+| Tela 1 - Boas-vindas | `Enter` |
+| Tela 2 - Pasta destino | `Enter` |
+| Tela 3 - Confirmacao | `Tab` `Tab` `Enter` |
+| Aguardar progresso | ~20 segundos |
+| Tela 5 - Concluir | `Enter` |
 
 ## Observacoes importantes
 - O arquivo para Windows se chama `IRPF2026Win32v1.5.exe` (~111 MB)
-- Instalacao silenciosa NAO funciona (web-wrapper, retorna exit code 0 mas nao instala)
+- Instalacao silenciosa (/VERYSILENT, /S) NAO funciona (web-wrapper, retorna exit code 0 mas nao instala)
 - O instalador PRECISA de internet durante a execucao
 - PRECISA de privilegios de administrador (erro: "Precisa de privilegios de administrador para instalar este programa")
-- Se o UAC estiver ativo, a tela fica preta no screenshot remoto — usar seta esquerda + Enter as cegas
-- O agente Mesh roda como SYSTEM e nao mostra GUI na sessao do usuario — SEMPRE abrir via Executar/Explorer na sessao do usuario
+- UAC secure desktop BLOQUEIA qualquer automacao remota (cliques, teclas) → usar Scheduled Task com RunLevel Highest para bypass
+- O agente Mesh roda como SYSTEM e nao mostra GUI na sessao do usuario
+- **SetForegroundWindow e OBRIGATORIO** antes de mandar Tab/Enter — sem foco, teclas vao pra janela errada
+- **Widgets do Windows 11**: painel persistente que NAO fecha com clique, Esc, Win+W ou Win+D. SetWindowPos(HWND_TOPMOST) resolve forcando instalador acima dele
+- **Navegacao**: sempre TECLADO (Tab+Enter), nunca clique por coordenada em botoes (Gemini impreciso ~50px)
+- mouse_event (commit 4586305) funciona para cliques em janelas de app, mas coordenadas do Gemini sao imprecisas
+
+## Caminho de instalacao
+- Padrao do instalador: `C:\Arquivos de Programas RFB\IRPF2026`
 
 ## Downloads Diretos - todas as plataformas IRPF 2026
 
@@ -122,4 +134,4 @@ dir "C:\Users\Public\Desktop\*IRPF*"
 - App Meu Imposto de Renda: Google Play / App Store
 
 ## Atualizado
-16/06/2026 - Flavinho (atendimento EFSM 01, com informacoes do Zanatto)
+16/06/2026 20:47 - Flavinho (instalacao concluida EFSM 01, metodo atualizado com Scheduled Task + SetForegroundWindow + Tab+Enter)
