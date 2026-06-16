@@ -53,8 +53,8 @@ Retorne APENAS um JSON válido (sem markdown, sem ```json) com este formato:
     {{"texto": "nome do elemento", "tipo": "icone|botao|aba|janela|menu|campo|link", "x": <coord_x>, "y": <coord_y>}}
   ]
 }}
-A resolução nativa da tela é {native_w}x{native_h}. A imagem está em {img_w}x{img_h} — ajuste coordenadas proporcionalmente.
-Liste TODOS os elementos clicáveis visíveis. Seja preciso nas coordenadas (centro do elemento)."""
+A imagem está em {img_w}x{img_h} pixels. Forneça as coordenadas na resolução DA IMAGEM ({img_w}x{img_h}).
+Liste APENAS os 10 elementos mais importantes. Seja preciso nas coordenadas (centro do elemento)."""
 
     payload = {
         "contents": [{
