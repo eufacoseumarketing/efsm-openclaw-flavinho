@@ -12,3 +12,4 @@ flavinho.png
 
 # Backups e artefatos temporários
 backups/
+.env
