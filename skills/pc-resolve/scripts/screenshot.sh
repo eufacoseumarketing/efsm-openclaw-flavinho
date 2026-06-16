@@ -15,14 +15,14 @@ log() { echo "[screenshot] $*" >&2; }
 
 # Argumentos
 DEVICE_NAME="${1:-}"
-SCALE="${2:-75}"
-QUALITY="${3:-60}"
+SCALE="${2:-35}"
+QUALITY="${3:-30}"
 MODEL="${4:-gemini-2.5-flash}"
 
 if [ -z "$DEVICE_NAME" ]; then
     echo "Uso: screenshot.sh <NOME_DO_PC> [scale] [quality] [model]"
-    echo "  scale: 1-100 (default 75)"
-    echo "  quality: 1-100 (default 60)"
+    echo "  scale: 1-100 (default 35, relay rápido)"
+    echo "  quality: 1-100 (default 30)"
     echo "  model: gemini-2.5-flash | gemini-2.5-pro (default flash)"
     exit 1
 fi
