@@ -4,11 +4,11 @@
 Instalar o programa da Receita Federal para declaracao de Imposto de Renda Pessoa Fisica.
 
 ## Pre-requisitos
-- Windows 10/11 (32 ou 64 bits)
+- Windows 10/11
 - 4 GB RAM
 - 500 MB de espaco livre
-- Conexao com internet (o instalador pode ser web-wrapper)
-- Java Runtime (vem embutido no instalador)
+- Conexao com internet durante a instalacao
+- Privilegios de administrador (obrigatorio)
 
 ## Passo a passo
 
@@ -21,59 +21,105 @@ powercfg /change hibernate-timeout-ac 0
 
 ### 2. Verificar se o IRPF ja esta instalado
 ```cmd
-dir "C:\Program Files\IRPF*" /b
-dir "C:\Program Files (x86)\IRPF*" /b
-dir "C:\Arquivos de Programas\IRPF*" /b
+dir "C:\Program Files\IRPF2026" /b
+dir "C:\Arquivos de Programas\IRPF2026" /b
 ```
-Se algum diretorio aparecer, o IRPF ja esta instalado.
+Se mostrar arquivos (IRPF2026.exe, help, etc), ja esta instalado.
 
 ### 3. Baixar o instalador
-- NAO usar link direto (os links da Receita mudam a cada ano e nao seguem padrao previsivel)
-- Abrir o site oficial: https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
-- Na pagina, localizar os botoes de download por sistema operacional
-- Clicar no botao "Windows" (geralmente o primeiro = 64 bits)
-- O download vai para a pasta Downloads do usuario
+
+#### Links Diretos IRPF 2026 (preferir estes):
+- Windows (32 bits): https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026Win32v1.5.exe
+- Linux (x64): https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026Linux-x86_64v1.5.sh.bin
+- MacOS ARM: https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-v1.5_arm.dmg
+- MacOS x64: https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-v1.5.dmg
+- Multiplataforma (Java): https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-1.5.zip
+
+#### Download via BITS (recomendado, nao trava o agente):
+```cmd
+bitsadmin /transfer IRPF_Download /download /priority HIGH "https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026Win32v1.5.exe" "C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe"
+```
+
+#### Fallback: pagina de download
+Se os links diretos nao funcionarem:
+https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
 
 ### 4. Executar o instalador
-O instalador do IRPF e um executavel GUI que precisa rodar na sessao do usuario.
 
-Metodo A - Via PowerShell na sessao do usuario (recomendado):
+- O instalador EXIGE privilegios de administrador!
+- Instalacao silenciosa (/VERYSILENT, /S) NAO funciona (web-wrapper)
+- Abrir na sessao do usuario, nao como SYSTEM
+
+#### Metodo A - Win+R com Ctrl+Shift+Enter (recomendado):
 1. `Win+R` para abrir Executar
-2. Digitar: `powershell`
-3. `Enter`
-4. Na janela do PowerShell, digitar:
+2. Digitar o caminho: `C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe`
+3. `Ctrl+Shift+Enter` = executar como administrador
+4. UAC: foco comeca no "Nao" → `Seta Esquerda` → `Enter` = Sim
+5. Aguardar extracao (~5 segundos)
+6. Tela de instalacao abre com foco em "Avancar" → `Enter`
+
+#### Metodo B - Via Start-Process no PowerShell:
+1. `Win+R` → `powershell` → `Enter`
+2. Digitar:
    ```powershell
-   Start-Process "C:\Users\<usuario>\Downloads\IRPF2026Win64v1.5.exe" -Wait
+   Start-Process "C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe" -Verb RunAs -Wait
    ```
-5. Seguir o assistente de instalacao na tela
-6. Clicar em "Sim" no UAC se aparecer
+3. UAC: Seta Esquerda + Enter = Sim
+4. Aguardar extracao (~5s)
+5. Foco em Avancar → Enter
 
-Metodo B - Via Explorer (fallback):
-1. `Win+E` para abrir o Explorer
-2. Navegar ate a pasta Downloads
-3. Duplo clique no arquivo `IRPF2026Win64v1.5.exe`
-4. Seguir o assistente na tela
+### 5. Navegar pelo assistente de instalacao
+Apos a extracao, aparece o assistente. Foco comeca em "Avancar":
+- Tela 1 (Boas-vindas): `Enter` = Avancar
+- Tela 2 (Termos de licenca): `Enter` = Aceitar e Avancar
+- Tela 3 (Pasta de destino): `Enter` = Avancar (manter padrao)
+- Tela 4 (Confirmar): `Enter` = Instalar
+- Aguardar a instalacao (~15-30 segundos)
+- Tela 5 (Concluido): `Enter` = Concluir
 
-### 5. Confirmar instalacao
+### 6. Confirmar instalacao
 ```cmd
 dir "C:\Program Files\IRPF2026" /b
 dir "C:\Arquivos de Programas\IRPF2026" /b
 ```
-Deve mostrar arquivos como `IRPF2026.exe`, `help`, etc.
+Deve mostrar: `IRPF2026.exe`, `help`, `lib`, etc.
 
-### 6. Verificar atalho na area de trabalho
-Deve existir um icone "IRPF 2026" na area de trabalho.
+### 7. Verificar atalho
+```cmd
+dir "C:\Users\Public\Desktop\*IRPF*"
+```
+
+## Resumo de teclas
+| Passo | Tecla |
+|-------|-------|
+| UAC - Confirmar Sim | `Seta Esquerda` + `Enter` |
+| Extracao | Aguardar ~5s |
+| Avancar (telas 1-4) | `Enter` |
+| Instalar | `Enter` |
+| Concluir | `Enter` |
 
 ## Observacoes importantes
-- O nome do arquivo de download varia: `IRPF2026Win64v1.5.exe`, `IRPF2026Windows.exe`, etc.
-- NAO usar instalacao silenciosa (`/VERYSILENT`, `/S`) - o instalador retorna exit code 0 mas NAO instala os arquivos (web-wrapper)
-- O instalador PRECISA de internet durante a execucao (baixa componentes adicionais)
-- Se o instalador mostrar pop-up de erro, verificar conexao com internet e tentar novamente
+- O arquivo para Windows se chama `IRPF2026Win32v1.5.exe` (~111 MB)
+- Instalacao silenciosa NAO funciona (web-wrapper, retorna exit code 0 mas nao instala)
+- O instalador PRECISA de internet durante a execucao
+- PRECISA de privilegios de administrador (erro: "Precisa de privilegios de administrador para instalar este programa")
+- Se o UAC estiver ativo, a tela fica preta no screenshot remoto — usar seta esquerda + Enter as cegas
+- O agente Mesh roda como SYSTEM e nao mostra GUI na sessao do usuario — SEMPRE abrir via Executar/Explorer na sessao do usuario
+
+## Downloads Diretos - todas as plataformas IRPF 2026
+
+| Plataforma | Link |
+|-----------|------|
+| Windows 32 bits | https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026Win32v1.5.exe |
+| Linux x86_64 | https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026Linux-x86_64v1.5.sh.bin |
+| MacOS ARM | https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-v1.5_arm.dmg |
+| MacOS x64 | https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-v1.5.dmg |
+| Multiplataforma (Java) | https://downloadirpf.receita.fazenda.gov.br/irpf/2026/irpf/arquivos/IRPF2026-1.5.zip |
 
 ## Links uteis
-- Site oficial: https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
+- Pagina de download: https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
 - Portal e-CAC: https://cav.receita.fazenda.gov.br/
-- App Meu Imposto de Renda (celular): Google Play / App Store
+- App Meu Imposto de Renda: Google Play / App Store
 
 ## Atualizado
-16/06/2026 - Flavinho (atendimento EFSM 01)
+16/06/2026 - Flavinho (atendimento EFSM 01, com informacoes do Zanatto)
