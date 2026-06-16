@@ -29,10 +29,13 @@ def main():
     img_w = img_res.get("width", 0)
     img_h = img_res.get("height", 0)
     nat_res = ss.get("native_resolution", {})
+    nat_w_raw = nat_res.get("width", 0)
+    nat_h_raw = nat_res.get("height", 0)
+    # Blindagem: se API retornar resolução da imagem como nativa, usa fallback
     if native_w == 0:
-        native_w = nat_res.get("width", 1920)
+        native_w = nat_w_raw if nat_w_raw > 1000 else 1920
     if native_h == 0:
-        native_h = nat_res.get("height", 1080)
+        native_h = nat_h_raw if nat_h_raw > 1000 else 1080
     b64 = ss.get("data", "")
     scale_x = native_w / img_w if img_w > 0 else 1.0
     scale_y = native_h / img_h if img_h > 0 else 1.0
