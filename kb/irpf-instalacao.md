@@ -64,9 +64,9 @@ https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/download/pgd/dirpf
    ```powershell
    Start-Process "C:\Users\<usuario>\Downloads\IRPF2026Win32v1.5.exe" -Verb RunAs -Wait
    ```
-3. UAC: Seta Esquerda + Enter = Sim
-4. Aguardar extracao (~5s)
-5. Foco em Avancar → Enter
+5. UAC: Seta Esquerda + Enter = Sim
+6. Aguardar extracao (~5s)
+7. Foco em Avancar → Enter
 
 ### 5. Navegar pelo assistente de instalacao
 Apos a extracao, aparece o assistente. Foco comeca em "Avancar":
