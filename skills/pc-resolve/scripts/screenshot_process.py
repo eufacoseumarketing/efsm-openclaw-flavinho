@@ -63,7 +63,7 @@ Liste TODOS os elementos clicáveis visíveis. Seja preciso nas coordenadas (cen
                 {"inline_data": {"mime_type": "image/jpeg", "data": b64}}
             ]
         }],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 8192}
     }
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
@@ -110,9 +110,27 @@ Liste TODOS os elementos clicáveis visíveis. Seja preciso nas coordenadas (cen
             try:
                 parsed = json.loads(m.group())
             except json.JSONDecodeError:
-                log(f"❌ JSON inválido na resposta Gemini")
-                print(f"📸 Screenshot: {method}, {native_w}x{native_h}\n⚠️  Gemini respondeu mas formato inválido:\n{raw[:500]}")
-                return
+                # Tentar recuperar JSON truncado (fechar chaves/colchetes)
+                from json import JSONDecodeError
+                # Contar abertura/fechamento
+                open_braces = raw.count('{') - raw.count('}')
+                open_brackets = raw.count('[') - raw.count(']')
+                # Remover trailing truncation (última linha incompleta)
+                lines = raw.split('\n')
+                if lines and not lines[-1].strip().endswith(('}','"',']')):
+                    lines = lines[:-1]
+                    raw = '\n'.join(lines)
+                # Fechar
+                raw = raw.rstrip().rstrip(',')
+                raw += ']' * open_brackets
+                raw += '}' * open_braces
+                try:
+                    parsed = json.loads(raw)
+                    log(f"⚠️  JSON truncado recuperado ({open_braces} chaves, {open_brackets} colchetes fechados)")
+                except JSONDecodeError:
+                    log(f"❌ JSON inválido na resposta Gemini (irrecuperável)")
+                    print(f"📸 Screenshot: {method}, {native_w}x{native_h}\n⚠️  Gemini respondeu mas formato inválido:\n{raw[:500]}")
+                    return
         else:
             log(f"❌ Sem JSON na resposta Gemini")
             print(f"📸 Screenshot: {method}, {native_w}x{native_h}\n⚠️  Gemini respondeu sem JSON:\n{raw[:500]}")
