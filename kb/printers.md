@@ -721,6 +721,72 @@ Remove-Item "$env:PUBLIC\PCR\tmp.ps1" -Force -ErrorAction SilentlyContinue
 
 ---
 
+## 📦 NÍVEL 9 — Instalação CLI de Utilitários do Fabricante (17/06/2026)
+
+> **Contexto:** Winget não está sempre instalado. A Microsoft Store exige GUI + screenshots.
+> Já tivemos sessão parada (d666e502) porque o Flavinho não conseguia instalar HP Smart sem ver a tela.
+> Estes comandos são **100% CLI**, zero Store, zero GUI, zero screenshot.
+
+### HP Smart (download direto HP — sem Store, sem winget)
+
+```powershell
+# Download do instalador oficial da HP (link direto de ftp.hp.com)
+Invoke-WebRequest -Uri "https://ftp.hp.com/pub/softlib/software13/HP_Quick_Start/HP_Smart_Installer.exe" -OutFile "$env:TEMP\HPSmartInstaller.exe"
+# Instalação silenciosa
+Start-Process -FilePath "$env:TEMP\HPSmartInstaller.exe" -ArgumentList "/quiet /norestart" -Wait
+Write-Host "HP Smart instalado"
+# Limpeza
+Remove-Item "$env:TEMP\HPSmartInstaller.exe" -Force
+```
+
+Se o link oficial mudar, buscar com: `site:hp.com "HP Smart" download "exe"`
+
+### HP Easy Start (alternativa quando HP Smart não funciona)
+
+```powershell
+Invoke-WebRequest -Uri "https://ftp.hp.com/pub/softlib/software13/printers/HPEasyStart.exe" -OutFile "$env:TEMP\HPEasyStart.exe"
+Start-Process -FilePath "$env:TEMP\HPEasyStart.exe" -ArgumentList "/quiet /norestart" -Wait
+Write-Host "HP Easy Start instalado"
+Remove-Item "$env:TEMP\HPEasyStart.exe" -Force
+```
+
+### Epson Drivers & Software
+
+```powershell
+# Epson Connect Printer Setup Utility
+Invoke-WebRequest -Uri "https://download.epson-europe.com/pub/download/6520/epson652080eu.exe" -OutFile "$env:TEMP\EpsonSetup.exe"
+Start-Process -FilePath "$env:TEMP\EpsonSetup.exe" -ArgumentList "/quiet /norestart" -Wait
+Remove-Item "$env:TEMP\EpsonSetup.exe" -Force
+```
+
+### Brother Utilities (buscar modelo específico)
+
+```powershell
+# Exemplo: Brother DCP-L2540DW Full Driver Package
+# Usar Google site: para achar o link exato do modelo
+Invoke-WebRequest -Uri "https://download.brother.com/welcome/dlf101995/your-model-installer.exe" -OutFile "$env:TEMP\BrotherSetup.exe"
+Start-Process -FilePath "$env:TEMP\BrotherSetup.exe" -ArgumentList "/quiet /norestart" -Wait
+Remove-Item "$env:TEMP\BrotherSetup.exe" -Force
+```
+
+### Canon IJ Setup
+
+```powershell
+# Canon Inkjet Printer Driver & Utility
+# Buscar por modelo em: https://www.canon.com.br/support/
+Invoke-WebRequest -Uri "https://downloads.canon.com/your-model-driver.exe" -OutFile "$env:TEMP\CanonSetup.exe"
+Start-Process -FilePath "$env:TEMP\CanonSetup.exe" -ArgumentList "/quiet /norestart" -Wait
+Remove-Item "$env:TEMP\CanonSetup.exe" -Force
+```
+
+### 🎯 Regra de ouro: CLI > GUI
+
+1. **SEMPRE tentar download direto CLI primeiro** (este Nível 9)
+2. Só abrir Microsoft Store se o download direto falhar
+3. Só usar screenshot se precisar confirmar resultado (nunca pra navegar na Store)
+
+---
+
 ## ⚠️ Dicas Jedi
 
 - **Papel importa!** Papel reciclado solta mais pó e entope. Papel úmido atola.
