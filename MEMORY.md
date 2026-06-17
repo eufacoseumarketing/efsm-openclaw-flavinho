@@ -148,3 +148,12 @@
 - UAC secure desktop: IMPOSSÍVEL automatizar → usar Scheduled Task RunLevel Highest
 - Janela atrás de Widgets: SetForegroundWindow + SetWindowPos(HWND_TOPMOST)
 - 🎯 Se já funciona, PARE: driver completo é nice-to-have, não bloqueador (16/06)
+
+### Google site: — busca avançada pra tudo (Zanatto 16/06)
+- `site:dominio.com termo` pesquisa SÓ dentro daquele domínio
+- Ex: `site:support.hp.com Driver DeskJet 2700` acha página de download
+- Ex: `site:h30434.www3.hp.com error 49` acha solução de erro específico
+- Ex: `site:dell.com/support driver Inspiron 15` pra qualquer fabricante
+- URL: `https://www.google.com/search?q=site%3Asupport.hp.com+Driver+DeskJet+2700`
+- Serve pra driver, erro, FAQ, manual, qualquer coisa em qualquer site
+- HP Smart via Store: `https://apps.microsoft.com/detail/9wzdncrfhwlh?hl=pt-BR&gl=BR`
