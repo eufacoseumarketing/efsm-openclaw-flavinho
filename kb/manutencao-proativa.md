@@ -51,8 +51,25 @@ if ($idleMin -gt 5) { Write-Host "STATUS: OCIOSO — seguro para manutenção" }
 ```
 
 **⚠️ Se usuário ativo (idle < 5 min):**
-- `diagnostic_only`: pode continuar (só leitura, não afeta o usuário).
-- `safe_fixes`: **PARE aqui.** Ações de limpeza/instalação podem atrapalhar. Relate "adiado_por_uso" e encerre.
+- **Tudo que é leve continua normal** — diagnóstico, limpeza de temp, lixeira, cache, drivers.
+- **Ações PESADAS são adiadas** (marcar no relatório como `adiado_por_uso`):
+  - ❌ SFC /ScanNow (consome I/O de disco)
+  - ❌ DISM /RestoreHealth (muito pesado, 5-15 min)
+  - ❌ Defender full scan (consome CPU)
+
+Resumo da regra de ociosidade:
+
+| Ação | Usuário ativo | Usuário ocioso |
+|------|:---:|:---:|
+| Diagnóstico (etapas 1-12) | ✅ Sempre | ✅ Sempre |
+| Limpeza temp/lixeira/cache | ✅ Sempre | ✅ Sempre |
+| Instalar drivers | ✅ Sempre | ✅ Sempre |
+| Defender quick scan | ✅ Sempre | ✅ Sempre |
+| SFC /ScanNow | ❌ Adiar | ✅ Executar |
+| DISM /RestoreHealth | ❌ Adiar | ✅ Executar |
+| Defender full scan | ❌ Adiar | ✅ Executar |
+
+Se algo foi adiado, incluir no JSON: `"deferred": ["sfc", "dism"]` com motivo `"user_active"`.
 
 ### Etapa 0b: Verificar último diagnóstico
 Se houve diagnóstico nas últimas 24h com recomendações não resolvidas, AGIR sobre elas no safe_fixes.
@@ -292,7 +309,7 @@ Gere um JSON ESTRUTURADO para o motor gravar em `maintenance_runs`:
 
 ## Regras de ouro (atualizadas)
 
-1. **Verificar ociosidade primeiro (Etapa 0a).** Se safe_fixes e usuário ativo → abortar com "adiado_por_uso".
+1. **Verificar ociosidade (Etapa 0a).** Ações LEVES rodam sempre. Ações PESADAS (SFC, DISM, full scan) só com idle > 5 min.
 2. **Diagnóstico COMPLETO sempre.** Safe_fixes não pula etapas — faz as 12 + ações.
 3. **NUNCA reinicie a máquina.** Se algo pedir reboot, anote na recomendação.
 4. **Drivers = SIM (safe_fixes).** São seguros, raramente exigem reboot forçado.
@@ -328,7 +345,7 @@ Gere um JSON ESTRUTURADO para o motor gravar em `maintenance_runs`:
 
 | Etapa / O que | diagnostic_only | safe_fixes |
 |-------|:---:|:---:|
-| 0a — Verificar ociosidade | ✅ | ⚠️ Para se usuário ativo |
+| 0a — Verificar ociosidade | ✅ | ✅ (adiar só ações pesadas) |
 | 0b — Último diagnóstico | ✅ | ✅ Herda recomendações |
 | 1 — Desativar sleep | ✅ | ✅ |
 | 2 — Info sistema | ✅ | ✅ |
