@@ -646,11 +646,29 @@ bash skills/pc-resolve/scripts/open-url.sh "EFSM 01" "https://support.hp.com/br-
 Depois orientar o usuário a navegar na página. NÃO tente clicar nos botões
 do site HP — é JavaScript pesado, coordenadas não funcionam.
 
-**Opção C — winget (Windows 11+, raro funcionar):**
+**Opção C — HP Smart via Microsoft Store (recomendado pela HP em 2026):**
 ```powershell
-winget search "HP DeskJet 2700"
+# Winget (Windows 11+):
+winget install 9WZDNCRFHWLH
+
+# Ou abrir a loja direto:
+start ms-windows-store://pdp/?productid=9WZDNCRFHWLH
 ```
-Quase nunca disponível em Windows 10. Só testar, não insistir.
+- A HP agora direciona tudo pro HP Smart — é o caminho oficial
+- App detecta a impressora na rede, baixa o driver completo automaticamente
+- Link: https://apps.microsoft.com/detail/9wzdncrfhwlh?hl=pt-BR&gl=BR
+- Se winget não existir, abrir a URL no navegador da máquina
+
+**Opção D — Google `site:` pra achar página exata de driver:**
+```
+site:support.hp.com Driver DeskJet 2700
+```
+Ou via URL: `https://www.google.com/search?q=site%3Asupport.hp.com+Driver+DeskJet+2700`
+
+- Funciona pra QUALQUER fabricante: `site:support.brother.com driver`, etc
+- O operador `site:` restringe a busca a um domínio específico
+- Útil pra achar KB articles, changelogs, páginas de download oficiais
+- Mesmo que o link mude, o Google indexa a página nova rapidamente
 
 ### O que NUNCA fazer
 
