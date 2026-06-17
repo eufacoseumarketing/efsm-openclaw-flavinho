@@ -549,6 +549,61 @@ Tempo total: ~30s (ARP) + ~30s (port scan) + ~10s (SNMP) ≈ 1 minuto.
 
 ---
 
+## ⚡ NÍVEL 7 — Instalação Rápida via IPP + Microsoft Driver (16/06/2026)
+
+### O caso real (HP DeskJet 2700 na EFSM 01)
+
+A impressora já estava na rede (192.168.15.25) e o Windows já tinha mapeado
+a porta IPP (`http://192.168.15.25:631/ipp/print`). O driver HP não existia
+no sistema e o Windows Update não baixou via GUI. A solução foi usar o
+**Microsoft IPP Class Driver**, que já vem no Windows e funciona com
+qualquer impressora que suporte IPP (quase todas modernas).
+
+### Método rápido (quando já tem IP e porta)
+
+```powershell
+# 0. Identificar marca/modelo (SNMP)
+$s=New-Object -ComObject olePrn.OleSNMP
+$s.Open("192.168.15.25","public",2,3000)
+Write-Host "Modelo: $($s.Get('.1.3.6.1.2.1.25.3.2.1.3.1'))"
+$s.Close()
+
+# 1. Verificar portas existentes
+Get-PrinterPort | Where-Object {$_.Name -like "*192.168.15*"}
+
+# 2. Instalar com Microsoft IPP Class Driver
+Add-Printer -Name "HP DeskJet 2700" `
+  -PortName "http://192.168.15.25:631/ipp/print" `
+  -DriverName "Microsoft IPP Class Driver"
+
+# 3. Confirmar
+Get-Printer -Name "HP DeskJet 2700" | Select Name,DriverName,PortName,PrinterStatus
+```
+
+### Por que funciona
+
+- **Microsoft IPP Class Driver** é driver universal do Windows que fala IPP
+- Funciona com HP, Brother, Epson, Canon — qualquer impressora IPP
+- Zero download, zero dependência de Windows Update
+- A impressora PRECISA suportar IPP (porta 631) — a maioria moderna suporta
+- Se a porta IPP não existir, criar: `Add-PrinterPort -Name "http://IP:631/ipp/print"`
+
+### Quando usar
+
+- A impressora responde na porta 631 (Test-NetConnection)
+- Você TEM o IP (via SNMP discovery ou scan)
+- O driver do fabricante não está disponível/windows update falhou
+- Impressora doméstica/pequeno escritório (IPP Class Driver cobre bem)
+
+### Limitações
+
+- Recursos avançados (frente/verso, qualidade de impressão, scanner) podem
+  precisar do driver completo do fabricante
+- Funciona melhor em impressoras que seguem o padrão IPP Everywhere
+- Se o cliente precisa de scanner: instalar driver completo depois
+
+---
+
 ## ⚠️ Dicas Jedi
 
 - **Papel importa!** Papel reciclado solta mais pó e entope. Papel úmido atola.
