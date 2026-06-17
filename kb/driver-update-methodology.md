@@ -95,14 +95,27 @@ Get-WindowsUpdate
 | Fabricante | Problema |
 |-----------|---------|
 | **Dell** | Bloqueia VPS (403). URL direta do driver dá 404 |
-| **HP** | Exige detection via site |
+| **HP** | Bloqueia VPS (403, Akamai). HP Easy Start dá 404. FTP bloqueado |
 | **Lenovo** | Download center complexo |
 | **Acer** | Driving detection tool própria |
+
+### ⛔ REGRA ANTI-RABBIT-HOLE: Quando PARAR de buscar driver
+
+Se o dispositivo JÁ FUNCIONA (impressora imprime, áudio toca, WiFi conecta):
+**PARE. O objetivo foi atingido.**
+
+- Driver completo do fabricante = nice-to-have, NÃO é bloqueador
+- Tentar baixar driver completo quando o site bloqueia (403/404) = rabbit hole
+- Windows Update COM object sobrecarrega o agente (não use)
+- Se o cliente insistir: oriente download manual no site do fabricante
+- Tempo máximo pra tentar driver completo: 2 tentativas (~3 minutos). Falhou? Pare.
 
 ### Quando NÃO usar
 - Não estamos num browser interativo humano
 - O cliente não está disponível pra interagir
 - Tempo é limitado
+- O dispositivo JÁ FUNCIONA com driver genérico
+- O site do fabricante retornou 403/404 (bloqueia automação)
 
 ### Workaround para Dell
 Se absolutamente necessário, usar o Service Tag:

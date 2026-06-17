@@ -80,6 +80,16 @@ Este fluxo DEVE ser seguido em TODO atendimento. Não pule etapas.
 - ⚠️ Antes de clicar SEMPRE faça as contas: o alvo tem mais de 150px? Se não, teclado.
 - 🔁 Se errou UM clique, NÃO insista no clique — mude pra teclado IMEDIATAMENTE.
 
+### 5d. 🎯 REGRA DO SUFICIENTE: Nice-to-have NÃO é bloqueador
+- ⛔ Se o objetivo básico JÁ foi atingido (ex: impressora instalada e imprimindo),
+  NÃO persiga "melhorias" (ex: driver completo do fabricante).
+- "Driver completo" com site bloqueando (403/404) = rabbit hole garantido.
+- Se o dispositivo funciona, CONFIRME e PARE.
+- Se o cliente pedir algo extra: explique que funciona, e oriente o extra
+  como passo manual rápido.
+- Máximo 2 tentativas pra qualquer "extra". Falhou? "Isso aqui já funciona,
+  o extra é melhor fazer manualmente em 2 minutos."
+
 ### 5c. 🪟 REGRA DO FOCO: SetForegroundWindow ANTES de qualquer teclado
 - Antes de mandar Tab, Enter, ou qualquer tecla pra uma janela de app:
   1. SetForegroundWindow via PowerShell

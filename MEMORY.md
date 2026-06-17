@@ -147,3 +147,4 @@
 - Widgets Win11: só fecha se outra janela for TOPMOST (SetWindowPos -1)
 - UAC secure desktop: IMPOSSÍVEL automatizar → usar Scheduled Task RunLevel Highest
 - Janela atrás de Widgets: SetForegroundWindow + SetWindowPos(HWND_TOPMOST)
+- 🎯 Se já funciona, PARE: driver completo é nice-to-have, não bloqueador (16/06)
