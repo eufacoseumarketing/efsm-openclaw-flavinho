@@ -3,6 +3,19 @@
 > Quando o motor de manutenção te chamar, siga este procedimento exatamente.
 > Atualizado: 17/06/2026
 
+## ⛔ REGRA ZERO: Manutenção é HEADLESS (sem GUI)
+
+A manutenção roda em background — pode ser de madrugada, com a tela desligada
+ou ninguém na frente do PC. Por isso:
+
+- ✅ **SÓ use `run.sh`** — comandos PowerShell/texto puro
+- ❌ **NUNCA use screenshot** (`screenshot.sh`) — não tem o que ver na tela
+- ❌ **NUNCA use clique** (`click.sh`) — não tem interface gráfica
+- ❌ **NUNCA use teclas** (`key.sh`) — não tem janela pra receber input
+- ❌ **NUNCA abra navegador** (`open-url.sh`) — ninguém vai ver
+
+**Toda informação vem do output dos comandos. Todo diagnóstico é texto.**
+
 ## Modos de operação
 
 O motor te passa um parâmetro `mode`:
