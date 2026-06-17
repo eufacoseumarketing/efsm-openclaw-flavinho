@@ -26,17 +26,35 @@ O motor te passa um parâmetro `mode`:
 | `safe_fixes` | Pipeline completo de diagnóstico + correções seguras (limpeza, drivers, SFC/DISM) | Baixo |
 
 **⚠️ IMPORTANTE:** `safe_fixes` NÃO é "atalho" — ele executa o MESMO diagnóstico completo
-do modo `diagnostic_only` (etapas 1-8). A diferença é que DEPOIS do diagnóstico,
+do modo `diagnostic_only` (etapas 0a-12). A diferença é que DEPOIS do diagnóstico,
 ele aplica correções nos itens que precisam.
 
 ## Pipeline — Diagnóstico (executar em AMBOS os modos)
 
-As etapas 1-8 são OBRIGATÓRIAS nos dois modos. A diferença está nas ações pós-diagnóstico.
+As etapas 1-12 são OBRIGATÓRIAS nos dois modos. A diferença está nas ações pós-diagnóstico.
 
-### Etapa 0: Verificar último diagnóstico (antes de começar)
-```bash
-bash skills/pc-resolve/scripts/run.sh --name "<NOME>" --cmd "Write-Host '=== ÚLTIMO DIAGNÓSTICO ==='; Write-Host 'Checar se há recomendações pendentes de sessão anterior nas mensagens de suporte.'"
+### Etapa 0: Verificar ociosidade do usuário (ANTES de qualquer ação)
+```powershell
+# Verificar se o usuário está ocioso (sem mexer mouse/teclado há >5 min)
+Add-Type -AssemblyName System.Windows.Forms
+$idle = [System.Windows.Forms.SystemInformation]::MouseHoverTime
+# Método mais confiável via P/Invoke + user32.dll
+$signature = '[DllImport("user32.dll")] public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);'
+$type = Add-Type -MemberDefinition $signature -Name Win32LastInput -Namespace Win32 -PassThru
+$struct = New-Object Win32.LastInputInfo
+$struct.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf($struct)
+$type::GetLastInputInfo([ref]$struct)
+$idleMs = [Environment]::TickCount - $struct.dwTime
+$idleMin = [math]::Round($idleMs / 60000, 1)
+Write-Host "Usuário ocioso há: $idleMin minutos"
+if ($idleMin -gt 5) { Write-Host "STATUS: OCIOSO — seguro para manutenção" } else { Write-Host "STATUS: ATIVO — usuário usando a máquina" }
 ```
+
+**⚠️ Se usuário ativo (idle < 5 min):**
+- `diagnostic_only`: pode continuar (só leitura, não afeta o usuário).
+- `safe_fixes`: **PARE aqui.** Ações de limpeza/instalação podem atrapalhar. Relate "adiado_por_uso" e encerre.
+
+### Etapa 0b: Verificar último diagnóstico
 Se houve diagnóstico nas últimas 24h com recomendações não resolvidas, AGIR sobre elas no safe_fixes.
 
 ### Etapa 1: Desativar descanso de tela
@@ -104,16 +122,46 @@ Get-MpThreat | Select-Object -First 5 Name,Severity,DetectionTime,Action
 Get-CimInstance Win32_StartupCommand | Select-Object Name,Command,User,Location | ForEach-Object { Write-Host "- $($_.Name) -> $($_.Command) [$($_.Location)]" }
 ```
 
-### Etapa 8: Eventos críticos (últimas 24h) e tamanho de temp
+### Etapa 8: Eventos críticos (últimas 24h) + tamanho de temp
 ```powershell
-# Eventos críticos
-Get-EventLog System -After (Get-Date).AddDays(-1) -EntryType Error | Group-Object Source | Sort-Object Count -Descending | Select-Object -First 5 Count,Name | ForEach-Object { Write-Host "- $($_.Count)x $($_.Name)" }
+# Eventos críticos (FILTRAR falsos positivos do Mesh Agent)
+# ⚠️ O próprio Flavinho reinicia o agente quando ele trava → eventos de "Mesh Agent" são esperados e devem ser ignorados
+Get-EventLog System -After (Get-Date).AddDays(-1) -EntryType Error | Where-Object { $_.Source -notmatch "Mesh Agent|Service Control Manager.*Mesh" } | Group-Object Source | Sort-Object Count -Descending | Select-Object -First 5 Count,Name | ForEach-Object { Write-Host "- $($_.Count)x $($_.Name)" }
 
 # Tamanho dos temporários (só informar)
 $userTemp = (Get-ChildItem "$env:TEMP" -Recurse -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
 $sysTemp = (Get-ChildItem "C:\Windows\Temp" -Recurse -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
 Write-Host "User Temp: $([math]::Round($userTemp/1MB,1)) MB"
 Write-Host "System Temp: $([math]::Round($sysTemp/1MB,1)) MB"
+```
+
+### Etapa 9: Saúde do SSD/HD (SMART)
+```powershell
+# Leve — só leitura, zero impacto
+Get-PhysicalDisk | Select-Object FriendlyName,MediaType,HealthStatus,OperationalStatus,Size | ForEach-Object { Write-Host "$($_.FriendlyName) | $($_.MediaType) | Saúde: $($_.HealthStatus) | Status: $($_.OperationalStatus)" }
+```
+
+### Etapa 10: Plano de energia
+```powershell
+# Leve — só leitura
+powercfg /GetActiveScheme
+```
+
+### Etapa 11: Pontos de restauração
+```powershell
+# Leve — só leitura
+Get-ComputerRestorePoint | Select-Object -Last 2 Description,CreationTime | ForEach-Object { Write-Host "Restore: $($_.Description) — $($_.CreationTime)" }
+if ((Get-ComputerRestorePoint).Count -eq 0) { Write-Host "NENHUM ponto de restauração encontrado" }
+```
+
+### Etapa 12: Serviços críticos
+```powershell
+# Leve — só leitura. Verificar serviços que DEVERIAM estar rodando
+$criticos = @("wuauserv","WinDefend","MpsSvc","BFE","mpssvc")
+foreach ($svc in $criticos) {
+    $s = Get-Service $svc -ErrorAction SilentlyContinue
+    if ($s) { Write-Host "$($s.Name): $($s.Status)" } else { Write-Host "$svc: NÃO ENCONTRADO" }
+}
 ```
 
 ---
@@ -244,18 +292,21 @@ Gere um JSON ESTRUTURADO para o motor gravar em `maintenance_runs`:
 
 ## Regras de ouro (atualizadas)
 
-1. **Diagnóstico COMPLETO sempre.** Safe_fixes não pula etapas — faz as 8 + ações.
-2. **NUNCA reinicie a máquina.** Se algo pedir reboot, anote na recomendação.
-3. **Drivers = SIM (safe_fixes).** São seguros, raramente exigem reboot forçado.
-4. **KBs cumulativas/Security updates = NÃO.** Podem forçar reboot. Só relatar.
-5. **NUNCA desabilite antivírus ou firewall.** Só relate status.
-6. **NUNCA desinstale programas.** Só relate itens suspeitos no startup.
-7. **Comandos longos (>10s): use Start-Process assíncrono** (ver `kb/execucao-assincrona-powershell.md`).
-8. **SFC roda em AMBOS os modos.** DISM só no safe_fixes e só se SFC encontrar violações.
-9. **Limpeza SEMPRE no safe_fixes.** Independente do espaço livre. Liberar disco NUNCA é ruim.
-10. **Se o agente estiver busy:** espere 30s, tente de novo. Não spame.
-11. **🔑 NOVIDADE: Safe_fixes herda recomendações do último diagnóstico.** Se houve diagnóstico < 24h com recomendações, execute-as (ex: "instalar driver Dell" vira ação).
-12. **🔑 NOVIDADE: Scan do Defender se >7 dias sem scan.** Incluir quick scan no safe_fixes se LastQuickScanAge > 7.
+1. **Verificar ociosidade primeiro (Etapa 0a).** Se safe_fixes e usuário ativo → abortar com "adiado_por_uso".
+2. **Diagnóstico COMPLETO sempre.** Safe_fixes não pula etapas — faz as 12 + ações.
+3. **NUNCA reinicie a máquina.** Se algo pedir reboot, anote na recomendação.
+4. **Drivers = SIM (safe_fixes).** São seguros, raramente exigem reboot forçado.
+5. **KBs cumulativas/Security updates = NÃO.** Podem forçar reboot. Só relatar.
+6. **NUNCA desabilite antivírus ou firewall.** Só relate status.
+7. **NUNCA desinstale programas.** Só relate itens suspeitos no startup.
+8. **Comandos longos (>10s): use Start-Process assíncrono** (ver `kb/execucao-assincrona-powershell.md`).
+9. **SFC roda em AMBOS os modos.** DISM só no safe_fixes e só se SFC encontrar violações.
+10. **Limpeza SEMPRE no safe_fixes.** Independente do espaço livre.
+11. **Se o agente estiver busy:** espere 30s, tente de novo. Não spame.
+12. **Safe_fixes herda recomendações do último diagnóstico** (< 24h).
+13. **Scan do Defender se >7 dias sem scan.**
+14. **🔑 NOVIDADE: Eventos do Mesh Agent no log são IGNORADOS.** São causados pelo próprio Flavinho reiniciando o agente. Filtrar com `Where-Object Source -notmatch "Mesh Agent"`.
+15. **🔑 NOVIDADE: Novas checagens são LEVES (só leitura).** SSD SMART, power plan, restore points, serviços críticos — zero impacto na performance do usuário.
 
 ## Exemplos de status
 
@@ -265,26 +316,37 @@ Gere um JSON ESTRUTURADO para o motor gravar em `maintenance_runs`:
 | SFC | sem violações | — | corrompido |
 | Defender | ativo + scan <7d | scan >7d | desativado |
 | Updates pendentes | 0-3 | 4-10 | >10 |
-| Eventos críticos 24h | 0-2 | 3-10 | >10 |
+| Eventos críticos* | 0-2 | 3-10 | >10 |
+| SSD/HD SMART | Healthy | Warning | Unhealthy/Failing |
+| Plano energia | Alto desempenho | Equilibrado | Economia |
+| Restore point | <7 dias | 7-30 dias | Nenhum |
 | Uptime | <7 dias | 7-30 dias | >30 dias |
+
+> \* Eventos do **Mesh Agent** são ignorados — o próprio Flavinho reinicia o agente quando ele trava, gerando eventos esperados no log. Não são problema real.
 
 ## Tabela de ações por modo
 
-| O que | diagnostic_only | safe_fixes |
+| Etapa / O que | diagnostic_only | safe_fixes |
 |-------|:---:|:---:|
-| Desativar sleep (Etapa 1) | ✅ | ✅ |
-| Info sistema (Etapa 2) | ✅ | ✅ |
-| Espaço em disco (Etapa 3) | ✅ | ✅ |
-| Updates pendentes (Etapa 4) | ✅ Só listar | ✅ Listar + instalar drivers |
-| SFC scan (Etapa 5) | ✅ | ✅ |
-| DISM restore (Etapa 5) | ❌ | ✅ Se SFC corrupto |
-| Defender status (Etapa 6) | ✅ | ✅ |
-| Defender quick scan | ❌ | ✅ Se >7d sem scan |
-| Startup (Etapa 7) | ✅ | ✅ |
-| Eventos críticos (Etapa 8) | ✅ | ✅ |
-| Limpar temp/lixeira/cache | ❌ | ✅ Sempre |
-| Instalar drivers pendentes | ❌ | ✅ |
-| Instalar KBs/security | ❌ | ❌ Nunca |
+| 0a — Verificar ociosidade | ✅ | ⚠️ Para se usuário ativo |
+| 0b — Último diagnóstico | ✅ | ✅ Herda recomendações |
+| 1 — Desativar sleep | ✅ | ✅ |
+| 2 — Info sistema | ✅ | ✅ |
+| 3 — Espaço em disco | ✅ | ✅ |
+| 4 — Updates pendentes | ✅ Só listar | ✅ Listar + instalar drivers |
+| 5 — SFC scan | ✅ | ✅ |
+| 5a — DISM restore | ❌ | ✅ Se SFC corrupto |
+| 6 — Defender status | ✅ | ✅ |
+| 6a — Defender quick scan | ❌ | ✅ Se >7d sem scan |
+| 7 — Startup | ✅ | ✅ |
+| 8 — Eventos críticos (ignorar Mesh) | ✅ | ✅ |
+| 9 — Saúde SSD/HD | ✅ | ✅ |
+| 10 — Plano de energia | ✅ | ✅ |
+| 11 — Pontos de restauração | ✅ | ✅ |
+| 12 — Serviços críticos | ✅ | ✅ |
+| A — Limpar temp/lixeira/cache | ❌ | ✅ Sempre |
+| B — Instalar drivers pendentes | ❌ | ✅ |
+| C — Instalar KBs/security | ❌ | ❌ Nunca |
 
 ## Scripts auxiliares
 
