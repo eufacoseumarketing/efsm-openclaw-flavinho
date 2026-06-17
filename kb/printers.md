@@ -604,6 +604,105 @@ Get-Printer -Name "HP DeskJet 2700" | Select Name,DriverName,PortName,PrinterSta
 
 ---
 
+## 🌐 NÍVEL 8 — Driver Completo do Fabricante (16/06/2026)
+
+### O problema
+
+IPP Class Driver imprime, mas o cliente quer funções avançadas: scanner,
+frente/verso, qualidade de impressão, níveis de tinta, digitalização.
+Precisa do driver completo do fabricante.
+
+### Realidade dura
+
+- HP, Brother, Epson, Canon: TODOS bloqueiam download automatizado do driver
+  (Akamai, Cloudflare, redirects, CAPTCHA, dynamic URLs).
+- Links FTP/HTTP mudam com frequência. O que funciona hoje quebra amanhã.
+- HP Easy Start, HP Smart, 123.hp.com: requerem interação GUI (selecionar modelo,
+  SO, clicar "Download"). Não são automatizáveis direto.
+- Windows Update Catalog: pode ter driver, mas busca é pesada e trava o slot
+  do agente (COM object Microsoft.Update.Session consome ~60s+).
+
+### O que FAZER
+
+**Opção A — Orientar o usuário (recomendado, 2 min):**
+```
+"Já instalei a impressora com driver básico — ela já imprime.
+ Pra funções extras (scanner, frente/verso), preciso que você baixe
+ o driver completo. É rapidinho:
+
+ 1. Acesse: https://support.hp.com/br-pt/drivers
+ 2. Busque: DeskJet 2700
+ 3. Selecione Windows 10/11
+ 4. Baixe o 'Pacote completo de software e driver'
+ 5. Execute o instalador
+
+ Enquanto baixa, já pode imprimir pelo driver básico."
+```
+
+**Opção B — Abrir página no navegador da máquina:**
+```bash
+bash skills/pc-resolve/scripts/open-url.sh "EFSM 01" "https://support.hp.com/br-pt/drivers"
+```
+Depois orientar o usuário a navegar na página. NÃO tente clicar nos botões
+do site HP — é JavaScript pesado, coordenadas não funcionam.
+
+**Opção C — winget (Windows 11+, raro funcionar):**
+```powershell
+winget search "HP DeskJet 2700"
+```
+Quase nunca disponível em Windows 10. Só testar, não insistir.
+
+### O que NUNCA fazer
+
+- ❌ Tentar baixar de FTP da HP (links quebram, 404)
+- ❌ COM Microsoft.Update.Session síncrono (trava slot 60s+)
+- ❌ Clicar em elementos do site HP via coordenada (JS dinâmico)
+- ❌ Insistir mais de 2 tentativas — diga pro usuário baixar manualmente
+
+### Exemplo real (EFSM 01, 16/06/2026)
+
+HP DeskJet 2700 — driver completo:
+- HP Easy Start → 404 ❌
+- 123.hp.com → redirect infinito ❌
+- Windows Update Catalog → não retornou drivers HP ❌
+- FTP HP → timeout ❌
+- **Solução:** IPP Class Driver pra imprimir AGORA, usuário baixa driver
+  completo depois quando estiver perto do PC ✅
+
+---
+
+## 🔧 Boas Práticas: PowerShell sem Escape (Base64)
+
+### O problema
+
+Enviar PowerShell inline via `--cmd` quebra em aspas, cifrões, backticks,
+e pipes. A cada camada de escape (shell → bash → cmd → powershell), um
+caractere some.
+
+### A solução (padrão validado 16/06/2026)
+
+```bash
+# 1. Escrever o .ps1 localmente (workspace do Flavinho)
+cat > /home/node/.openclaw/workspace/workspace-flavinho/meu-script.ps1 << 'PSEOF'
+Get-Printer | Where-Object {$_.Name -like "*HP*"} | Select Name,DriverName
+PSEOF
+
+# 2. Converter pra Base64 e enviar
+B64=$(cat /home/node/.openclaw/workspace/workspace-flavinho/meu-script.ps1 | base64 -w0)
+bash skills/pc-resolve/scripts/run.sh --name "EFSM 01" --cmd \
+  "powershell -ExecutionPolicy Bypass -Command \"[System.IO.File]::WriteAllBytes('C:\\Users\\Public\\PCR\\tmp.ps1', [System.Convert]::FromBase64String('$B64')); & 'C:\\Users\\Public\\PCR\\tmp.ps1'\""
+```
+
+**Por que funciona:** Base64 é caracteres seguros (A-Za-z0-9+/=). Zero escape.
+O arquivo .ps1 chega intacto no Windows com aspas, cifrões, pipes — tudo.
+
+**Limpeza:**
+```powershell
+Remove-Item "$env:PUBLIC\PCR\tmp.ps1" -Force -ErrorAction SilentlyContinue
+```
+
+---
+
 ## ⚠️ Dicas Jedi
 
 - **Papel importa!** Papel reciclado solta mais pó e entope. Papel úmido atola.
