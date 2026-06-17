@@ -117,6 +117,37 @@ Se o dispositivo JÁ FUNCIONA (impressora imprime, áudio toca, WiFi conecta):
 - O dispositivo JÁ FUNCIONA com driver genérico
 - O site do fabricante retornou 403/404 (bloqueia automação)
 
+### 🎯 Estratégia Google site: (LIÇÃO 16/06/2026)
+
+Para contornar sites que bloqueiam download automatizado (HP, Dell, Lenovo),
+usar o Google com operador `site:` pra ENCONTRAR a página de download e orientar
+o cliente (ou usar o link direto se disponível):
+
+```
+Google: site:support.hp.com Driver DeskJet 2700
+URL:    https://www.google.com/search?q=site%3Asupport.hp.com+Driver+DeskJet+2700
+```
+
+Isso funciona pra QUALQUER fabricante:
+- `site:support.hp.com Driver LaserJet M404`
+- `site:dell.com/support Driver Inspiron 15`
+- `site:lenovo.com/support Driver ThinkPad T14`
+
+O Google tem as páginas indexadas e acha o que o search interno do site esconde.
+Serve também pra achar soluções de problemas: `site:h30434.www3.hp.com error 49`
+
+### HP Smart via Microsoft Store (NOVO caminho)
+
+A HP agora padronizou: o driver completo vem pelo **HP Smart** (Windows Store).
+Link direto pra instalar:
+```
+https://apps.microsoft.com/detail/9wzdncrfhwlh?hl=pt-BR&gl=BR
+```
+
+O HP Smart detecta automaticamente a impressora na rede e instala o driver correto.
+⛔ Mas atenção: é app da Store, precisa de interação GUI — não dá pra instalar
+silenciosamente sem o cliente na frente do PC.
+
 ### Workaround para Dell
 Se absolutamente necessário, usar o Service Tag:
 ```
