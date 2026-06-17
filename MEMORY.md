@@ -117,3 +117,33 @@
 - 💻 **Download grande via BITS**: `bitsadmin /create /addfile /resume` — não trava API
 - 🐧 **Linux dualboot quebrado**: `fsck -y /dev/sda7` no initramfs, ou reinstalar limpo na partição
 - ⚠️ `run` API executa como SYSTEM → não lança GUI no usuário; só CLI e serviços
+
+### Regras de Ouro — Atualizadas 16/06/2026 (pós-IRPF + pós-falha impressora)
+
+#### 🎯 Cliques: NUNCA confiar em coordenada do Gemini
+- Gemini oscila ~50px entre screenshots no mesmo elemento
+- Clique por coordenada = ~70% de chance de erro em botões
+- SÓ clicar em alvo > 150px (ícones desktop, barra tarefas, botão gigante)
+- Errou 1 clique → muda IMEDIATAMENTE pra teclado, NÃO insista
+
+#### ⌨️ Teclado: método PADRÃO pra app windows
+- SEMPRE: SetForegroundWindow → Tab×N → Enter
+- KVM keyboard funciona em janelas de app (bypassa UIPI)
+- Sem foco = Tab+Enter vai pra Widgets/desktop
+- Script de foco: `kb/irpf-instalacao.md` passo 5
+
+#### 📋 KB: copiar e colar, NÃO "fazer parecido"
+- Se KB tem script pronto → EXECUTE ELE, não adapte
+- Here-string @'...'@ da KB funciona, inline seu vai quebrar
+- Scan de rede: SEMPRE assíncrono com controle por arquivo, NUNCA síncrono
+- Ignorar KB = atendimento falha (vide impressora 16/06)
+
+#### 🛑 Anti-ansiedade: máximo 3 comandos sem screenshot
+- 3+ comandos sem confirmar estado visual → PARE, screenshot AGORA
+- Agente "busy" → esperar 2 min, testar com `whoami`
+- Não disparar comandos em paralelo quando o anterior não respondeu
+
+#### 🪟 Janelas invisíveis: Widgets, UAC, foco
+- Widgets Win11: só fecha se outra janela for TOPMOST (SetWindowPos -1)
+- UAC secure desktop: IMPOSSÍVEL automatizar → usar Scheduled Task RunLevel Highest
+- Janela atrás de Widgets: SetForegroundWindow + SetWindowPos(HWND_TOPMOST)

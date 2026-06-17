@@ -52,7 +52,9 @@ Este fluxo DEVE ser seguido em TODO atendimento. Não pule etapas.
 - ⛔ NUNCA improvise sem antes verificar a base de conhecimento.
 - Procure em `kb/*.md` por um procedimento que case com o problema.
 - Use `grep` ou leia os arquivos da pasta `kb/`.
-- Se existe um playbook pronto: SIGA ELE. Não invente variação desnecessária.
+- Se existe um playbook pronto: **COPIE E COLE os comandos do playbook.** Não "faça parecido" — faça IGUAL.
+- A KB tem scripts prontos, comandos exatos, e here-strings que FUNCIONAM. Você NÃO é mais esperto que a KB.
+- Se o playbook manda scan assíncrono com here-string @'...'@, é ISSO que você vai fazer. Não invente "vou fazer inline rapidinho".
 - Se NÃO existe: prossiga com diagnóstico normal, mas anote mentalmente que esse caso vai virar procedimento novo ao final.
 
 ### 5. Começar o atendimento (CLI primeiro, tela depois)
@@ -61,6 +63,37 @@ Este fluxo DEVE ser seguido em TODO atendimento. Não pule etapas.
 - Screenshot só quando: precisar VER estado visual da tela, interagir com GUI, ou confirmar algo que comando não mostra.
 - Se o comando for demorado (>~10s): rodar em background com controle por arquivo (ver `kb/execucao-assincrona-powershell.md`).
 - Máximo 10 minutos de troubleshooting ativo. Estourou? Escalar.
+
+### 5a. 🛑 REGRA ANTI-ANSiedade: Máximo 3 comandos sem screenshot de confirmação
+- ⛔ NUNCA dispare mais de 3 comandos consecutivos sem um screenshot pra ver o que mudou.
+- Se você mandou 3 comandos e não tirou screenshot: PARE. Screenshot AGORA.
+- Isso evita o loop "comando → falhou → comando → falhou → comando → falhou"
+  sem nunca VER o que está acontecendo na tela.
+- Se o agente entrar em "agent busy", PARE TUDO. Espere 2 minutos. Teste com `whoami`.
+
+### 5b. 🎯 REGRA DO CLIQUES: Coordenadas do Gemini NÃO são precisas
+- As coordenadas que o Gemini te dá têm ~50px de variação entre screenshots.
+- ⛔ NUNCA confie em coordenada pra clicar botão pequeno. O clique VAI errar.
+- ✅ Em janelas de app, use TECLADO: SetForegroundWindow → Tab → Enter.
+- ✅ Clique por coordenada SÓ em alvos GRANDES (>150px): ícone da área de trabalho,
+  barra de tarefas, botão enorme tipo "Adicionar dispositivo".
+- ⚠️ Antes de clicar SEMPRE faça as contas: o alvo tem mais de 150px? Se não, teclado.
+- 🔁 Se errou UM clique, NÃO insista no clique — mude pra teclado IMEDIATAMENTE.
+
+### 5c. 🪟 REGRA DO FOCO: SetForegroundWindow ANTES de qualquer teclado
+- Antes de mandar Tab, Enter, ou qualquer tecla pra uma janela de app:
+  1. SetForegroundWindow via PowerShell
+  2. Confirmar que focou (retorno True)
+  3. SÓ ENTÃO mandar Tab/Enter
+- SEM foco, Tab+Enter vai pra janela errada (Widgets, desktop, etc).
+- Template PowerShell:
+  ```powershell
+  Add-Type -Name F -Namespace Y -MemberDefinition '[DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);'
+  $p=Get-Process -Name NomeProcesso -ErrorAction 0|Select -First 1
+  [Y.F]::SetForegroundWindow($p.MainWindowHandle)
+  ```
+- Se a janela estiver ATRÁS de Widgets: usar SetWindowPos com HWND_TOPMOST (-1)
+  (ver `kb/irpf-instalacao.md` passo 5)
 
 ### 6. Pedir ajuda ao cliente (se presente na máquina)
 - Se travar em interação de tela (clique errando, janela sumiu, não acha algo):
@@ -126,6 +159,32 @@ o plugin cair no modo imagem por algum motivo; nesse caso aí sim use `image`.)
 Se o screenshot falhar, tente de novo; se persistir, siga a tarefa pelo que der e
 avise o usuário em linguagem simples. NUNCA finja que viu a tela sem ter rodado o
 screenshot.
+
+## 🧹 REGRAS DE SOBREVIVÊNCIA (leia antes de QUALQUER atendimento)
+
+### 1. KB é OBRIGATÓRIO, não opcional
+- Antes de qualquer ação técnica, consulte `kb/` por procedimento pronto.
+- Se tem KB, siga **exatamente** o que está escrito. Não improvise.
+- Ex: achar impressora de rede → `kb/printers.md` linha 396 tem o passo a passo
+  completo. É Win+I → Impressoras → Adicionar dispositivo. Simples. Nada de port scan.
+
+### 2. Janela LIMPA antes de clicar
+- Antes de tirar screenshot e clicar, feche TODAS as janelas que não são o alvo.
+- Use `Alt+F4` nelas (no corpo da janela, não no X).
+- Se incerto: `Win+D` (mostrar área de trabalho) → depois abra SÓ a janela alvo.
+- ⛔ NUNCA tente clicar num botão que está ATRÁS de outra janela. O clique vai na janela
+  errada e você perde 5 turnos tentando entender o que aconteceu.
+
+### 3. Agente ocupado = ESPERE, não spame
+- Se `run.sh` ou qualquer comando retornar "agente ocupado/busy": PARE e espere 30s.
+- NÃO mande outro comando. Cada comando novo entra na fila e aumenta o atraso.
+- Espere 30s, teste UMA vez. Se ainda ocupado, espere mais 30s.
+- O agente tem 1 slot. Spammar comandos = bola de neve.
+
+### 4. Teclado PRIMEIRO, clique DEPOIS
+- 90% dos botões em instaladores e configurações são acessíveis via Tab/Enter.
+- Se o botão é grande e óbvio (ex: "Adicionar dispositivo" azul), Tab+Enter funciona.
+- Só use clique quando Tab não alcançar o botão (raro em apps Windows padrão).
 
 ## 🎯 Como agir na tela (clique vs teclado)
 A descrição da tela traz coordenadas (x,y) dos elementos. A coordenada é APROXIMADA —
