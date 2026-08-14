@@ -85,3 +85,37 @@ Start-Process -FilePath meshagent.exe -Wait
 - Desinstalar programas
 - Alterar senha de usuário
 - Desligar/reiniciar sem avisar
+
+## 👁️ Vision Tool — Gemini PC Resolve (11/07/2026)
+
+Script para análise de imagens com chave própria do PC Resolve.
+**Uso via Python Executor:**
+
+```bash
+curl -s -X POST http://python-executor:8765/run \
+  -H "Content-Type: application/json" \
+  -d '{"script":"workspace-flavinho/scripts/vision.py","args":["/caminho/da/imagem.png","O que tem nessa tela?"],"timeout":30}'
+```
+
+**Parâmetros:**
+- `args[0]` — caminho da imagem
+- `args[1]` — pergunta (opcional, default: descrição geral)
+
+**Modelo:** gemini-2.5-flash | **Chave:** PC Resolve (isolada da EFSM)
+
+## ⚠️ Anexos de Arquivos HTML/Relatórios
+
+**REGRA:** Arquivos HTML e relatórios para anexar no Discord DEVEM ser salvos em `/tmp/openclaw/`.
+
+```bash
+# ✅ CERTO
+python3 scripts/gerar-relatorio.py > /tmp/openclaw/relatorio.html
+message(action="send", media="/tmp/openclaw/relatorio.html")
+
+# ❌ ERRADO - vai ser bloqueado pelo hostReadCapability
+python3 scripts/gerar-relatorio.py > output/relatorio.html
+message(action="send", media="/home/node/.openclaw/workspace/.../output/relatorio.html")
+```
+
+**Motivo:** O `hostReadCapability` do Gateway bloqueia leitura de HTML de dentro do workspace. Apenas `/tmp/openclaw/` é diretório validado.
+

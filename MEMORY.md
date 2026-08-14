@@ -157,3 +157,8 @@
 - URL: `https://www.google.com/search?q=site%3Asupport.hp.com+Driver+DeskJet+2700`
 - Serve pra driver, erro, FAQ, manual, qualquer coisa em qualquer site
 - HP Smart via Store: `https://apps.microsoft.com/detail/9wzdncrfhwlh?hl=pt-BR&gl=BR`
+
+## Regra de anexos (Discord)
+- Arquivos HTML/relatórios a serem anexados no Discord DEVEM ser salvos em `/tmp/openclaw/` (ex: `/tmp/openclaw/relatorio.html`), NUNCA em `/tmp/` diretamente.
+- O Gateway bloqueia leitura de arquivos de `/tmp/` raiz; `/tmp/openclaw/` é o diretório seguro validado.
+- Relatórios de diagnóstico PC Resolve: gerar HTML em `/tmp/openclaw/`.

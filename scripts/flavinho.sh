@@ -3,7 +3,7 @@
 # Uso: source scripts/flavinho.sh
 # ATUALIZADO 31/05/2026 — Plugin PC Resolve v1.2.2
 
-PC_API="https://agent.pcresolve.com.br/pcresolve/api"
+PC_API="https://agent.pcresolve.com.br/api"
 PC_KEY="pc-resolve-secret-key-change-me"
 AUTH="-H x-api-key:$PC_KEY"
 

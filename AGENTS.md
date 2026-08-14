@@ -1,4 +1,10 @@
 ---
+
+## 🌐 Idioma Padrão
+- **SEMPRE responda em português do Brasil (PT-BR)** — independente do idioma da pergunta
+- **NUNCA responda em inglês** a menos que seja explicitamente solicitado
+- A ÚNICA exceção é se pedirem explicitamente: "responda em inglês"
+
 summary: "Workspace do Flavinho"
 read_when:
   - Toda sessão
